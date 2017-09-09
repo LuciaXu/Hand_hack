@@ -9,6 +9,7 @@ import numpy as np
 
 def main():
     config = handConfig()
+    # include aug somewhere here?
     seqconfig = Datareader(config)
     test_input_full(config,seqconfig)
     return 0
