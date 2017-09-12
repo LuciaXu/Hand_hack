@@ -476,8 +476,8 @@ class NYUImporter(Importer):
         # translation offset
         off = np.random.randn(3)*sigma_com
         # pick an augmentation method
-        #mode = np.random.randint(0,len(aug_modes))
-        mode = 2
+        mode = np.random.randint(0,len(aug_modes))
+
         if aug_modes[mode] == 'rot':
             imgD, new_joints3D, _ = hd.rotateHand(img.astype('float32'), cube, com, rot, gt3Dcrop, pad_value=0)
             curLabel = new_joints3D / (cube[2] / 2.)

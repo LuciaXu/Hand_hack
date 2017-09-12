@@ -35,7 +35,7 @@ def Datareader(config):
     print(cwd)
     rng = np.random.RandomState(23455)
     ds = NYUImporter('/media/data_cifs/lu/NYU/dataset')
-    Seq1= ds.loadAugSequence('train', shuffle=True, rng=rng, docom=True,allJoints=True)
+    Seq1= ds.loadAugSequence('train', shuffle=True, rng=rng, docom=True,allJoints=True,Nmax=10)
     trainSeqs = [Seq1]
 
     trainDataSet = NYUDataset(imgSeqs = trainSeqs)
