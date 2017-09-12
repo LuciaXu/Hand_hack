@@ -5,12 +5,12 @@ from datetime import datetime
 import tensorflow as tf
 from data_loader import inputs
 from check_fun import showdepth, showImagefromArray,showImageLable,trans3DsToImg,showImageLableCom,showImageJoints,showImageJointsandResults
-from tf_fun import regression_mse, correlation, make_dir, \
-    fine_tune_prepare_layers, ft_optimizer_list
+#from tf_fun import regression_mse, correlation, make_dir, \
+#    fine_tune_prepare_layers, ft_optimizer_list
 from pose_evaluation import getMeanError,getMeanError_np,getMean_np,getMeanError_train
 import numpy as np
 import cPickle
-from checkpoint import  list_variables
+#from checkpoint import  list_variables
 
 
 def check_image_label(im, jts, com, M,cube_22,allJoints=False,line=False):

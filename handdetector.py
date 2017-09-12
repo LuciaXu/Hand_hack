@@ -586,3 +586,229 @@ class HandDetector(object):
         cube = (sz + tol, sz + tol, sz + tol)
 
         return cube
+
+    def rotatePoint2D(self,p1, center, angle):
+        """
+        Rotate a point in 2D around center
+        :param p1: point in 2D (u,v,d)
+        :param center: 2D center of rotation
+        :param angle: angle in deg
+        :return: rotated point
+        """
+        alpha = angle * numpy.pi / 180.
+        pp = p1.copy()
+        pp[0:2] -= center[0:2]
+        pr = numpy.zeros_like(pp)
+        pr[0] = pp[0] * numpy.cos(alpha) - pp[1] * numpy.sin(alpha)
+        pr[1] = pp[0] * numpy.sin(alpha) + pp[1] * numpy.cos(alpha)
+        pr[2] = pp[2]
+        ps = pr
+        ps[0:2] += center[0:2]
+        return ps
+
+    def rotateHand(self, dpt, cube, com, rot, joints3D, pad_value=0):
+        """
+        Rotate hand virtually in the image plane by a given angle
+        :param dpt: cropped depth image with different CoM
+        :param cube: metric cube of size (sx,sy,sz)
+        :param com: original center of mass, in image coordinates (x,y,z)
+        :param rot: rotation angle in deg
+        :param joints3D: original joint coordinates, in 3D coordinates (x,y,z)
+        :param pad_value: value of padding
+        :return: adjusted image, new 3D joint coordinates, rotation angle in XXX
+        """
+        #print('Com: ',com)
+        # if rot is 0, nothing to do
+        if numpy.allclose(rot, 0.):
+            return dpt, joints3D, rot
+
+        rot = numpy.mod(rot, 360)
+
+        M = cv2.getRotationMatrix2D((dpt.shape[1] // 2, dpt.shape[0] // 2), -rot, 1)
+        new_dpt = cv2.warpAffine(dpt, M, (dpt.shape[1], dpt.shape[0]), flags=cv2.INTER_NEAREST,
+                                 borderMode=cv2.BORDER_CONSTANT, borderValue=pad_value)
+
+        com3D = self.importer.jointImgTo3D(com)
+        joint_2D = self.importer.joints3DToImg(joints3D + com3D)
+        data_2D = numpy.zeros_like(joint_2D)
+        for k in xrange(data_2D.shape[0]):
+            data_2D[k] = self.rotatePoint2D(joint_2D[k], com[0:2], rot)
+        new_joints3D = (self.importer.jointsImgTo3D(data_2D) - com3D)
+
+        return new_dpt, new_joints3D, rot
+
+    def scaleHand(self, dpt, cube, com, sc, joints3D, M, pad_value=0):
+        """
+        Virtually scale the hand by applying different cube
+        :param dpt: cropped depth image with different CoM
+        :param cube: metric cube of size (sx,sy,sz)
+        :param com: original center of mass, in image coordinates (x,y,z)
+        :param sc: scale factor for cube
+        :param joints3D: 3D joint coordinates, cropped to old CoM
+        :param pad_value: value of padding
+        :return: adjusted image, new 3D joint coordinates, new center of mass in image coordinates
+        """
+
+        # if scale is 1, nothing to do
+        if numpy.allclose(sc, 1.):
+            return dpt, joints3D, cube, M
+
+        new_cube = [s*sc for s in cube]
+
+        # check for 1/0.
+        if not numpy.allclose(com[2], 0.):
+            # scale to original size
+            xstart, xend, ystart, yend, _, _ = self.comToBounds(com, cube)
+            scoff = dpt.shape[0] / float(xend-xstart)
+            xstart2, xend2, ystart2, yend2, _, _ = self.comToBounds(com, new_cube)
+            scoff2 = dpt.shape[0] / float(xend2-xstart2)
+
+            # normalization
+            scalePreX = 1./scoff
+            scalePreY = 1./scoff
+            scalePostX = scoff2
+            scalePostY = scoff2
+        else:
+            xstart = xstart2 = 0
+            ystart = ystart2 = 0
+            xend = xend2 = 0
+            yend = yend2 = 0
+
+            # normalization
+            scalePreX = 1.
+            scalePreY = 1.
+            scalePostX = 1.
+            scalePostY = 1.
+
+        # print com, scoff, xend, xstart, dpt.shape, com2, scalePreX, scalePostX, scalePreY, scalePostY
+
+        new_dpt = numpy.asarray(dpt.copy(), 'float32')
+        new_dpt = self.resizeCrop(new_dpt, (int(round(scalePreX*new_dpt.shape[1])),
+                                            int(round(scalePreY*new_dpt.shape[0]))))
+
+        # enlarge cube by padding, or cropping image
+        xdelta = abs(xstart-xstart2)
+        ydelta = abs(ystart-ystart2)
+        if sc > 1.:
+            new_dpt = numpy.pad(new_dpt, ((xdelta, xdelta), (ydelta, ydelta)), mode='constant', constant_values=pad_value)
+        elif numpy.allclose(sc, 1.):
+            pass
+        else:
+            new_dpt = new_dpt[xdelta:-(xdelta+1), ydelta:-(ydelta+1)]
+
+        rz = self.resizeCrop(new_dpt, (int(round(scalePostX*new_dpt.shape[1])),
+                                       int(round(scalePostY*new_dpt.shape[0]))))
+        new_dpt = numpy.zeros_like(dpt)
+        new_dpt[0:rz.shape[0], 0:rz.shape[1]] = rz[0:128, 0:128]
+
+        new_joints3D = joints3D
+
+        # recalculate transformation matrix
+        trans = numpy.eye(3)
+        trans[0, 2] = -xstart2
+        trans[1, 2] = -ystart2
+        scale = numpy.eye(3) * scalePostX
+        scale[2, 2] = 1
+
+        off = numpy.eye(3)
+        off[0, 2] = 0
+        off[1, 2] = 0
+
+        return new_dpt, new_joints3D, new_cube, numpy.dot(off, numpy.dot(scale, trans))
+
+    def transHand(self, dpt, cube, com, off, joints3D, M, pad_value=0):
+        """
+        Adjust already cropped image such that a moving CoM normalization is simulated
+        :param dpt: cropped depth image with different CoM
+        :param cube: metric cube of size (sx,sy,sz)
+        :param com: original center of mass, in image coordinates (x,y,z)
+        :param off: offset to center of mass (dx,dy,dz) in image coordinates
+        :param joints3D: 3D joint coordinates, cropped to old CoM
+        :param pad_value: value of padding
+        :return: adjusted image, new 3D joint coordinates, new center of mass in image coordinates
+        """
+
+        # if offset is 0, nothing to do
+        if numpy.allclose(off, 0.):
+            return dpt, joints3D, com, M
+
+        # new method, correction for shift due to z change:
+        # [(x-u)*(z-v)/f - cube/2] * f/(z-v) = (x-u) - cube/2*f/(z-v)    with u,v random offsets
+        new_com = com + off
+        co = numpy.zeros((3,), dtype='int')
+
+        # check for 1/0.
+        if not numpy.allclose(com[2], 0.):
+            # calculate offsets
+            co[0] = off[0] + cube[0] / 2. * self.fx / com[2] * (off[2] / (com[2] + off[2]))
+            co[1] = off[1] + cube[1] / 2. * self.fy / com[2] * (off[2] / (com[2] + off[2]))
+            co[2] = off[2]
+
+            # offset scale
+            xstart, xend, _, _, _, _ = self.comToBounds(com, cube)
+            scoff = dpt.shape[0] / float(xend - xstart)
+            xstart2, xend2, ystart2, yend2, _, _ = self.comToBounds(new_com, cube)
+            scoff2 = dpt.shape[0] / float(xend2 - xstart2)
+
+            co = numpy.round(co).astype('int')
+
+            # normalization
+            scalePreX = 1. / scoff
+            scalePreY = 1. / scoff
+            scalePostX = scoff2
+            scalePostY = scoff2
+        else:
+            # calculate offsets
+            co[0] = off[0]
+            co[1] = off[1]
+            co[2] = off[2]
+
+            co = numpy.round(co).astype('int')
+
+            # normalization
+            scalePreX = 1.
+            scalePreY = 1.
+            scalePostX = 1.
+            scalePostY = 1.
+
+        # print com, scoff, xend, xstart, dpt.shape, new_com, scalePreX, scalePostX, scalePreY, scalePostY
+
+        new_dpt = numpy.asarray(dpt.copy(), 'float32')
+        new_dpt = self.resizeCrop(new_dpt, (int(round(scalePreX * new_dpt.shape[1])),
+                                            int(round(scalePreY * new_dpt.shape[0]))))
+
+        # shift by padding
+        if co[0] > 0:
+            new_dpt = numpy.pad(new_dpt, ((0, 0), (0, co[0])), mode='constant', constant_values=pad_value)[:, co[0]:]
+        elif co[0] == 0:
+            pass
+        else:
+            new_dpt = numpy.pad(new_dpt, ((0, 0), (-co[0], 0)), mode='constant', constant_values=pad_value)[:, :co[0]]
+
+        if co[1] > 0:
+            new_dpt = numpy.pad(new_dpt, ((0, co[1]), (0, 0)), mode='constant', constant_values=pad_value)[co[1]:, :]
+        elif co[1] == 0:
+            pass
+        else:
+            new_dpt = numpy.pad(new_dpt, ((-co[1], 0), (0, 0)), mode='constant', constant_values=pad_value)[:co[1], :]
+
+        rz = self.resizeCrop(new_dpt, (int(round(scalePostX * new_dpt.shape[1])),
+                                       int(round(scalePostY * new_dpt.shape[0]))))
+        new_dpt = numpy.zeros_like(dpt)
+        new_dpt[0:rz.shape[0], 0:rz.shape[1]] = rz[0:128, 0:128]
+
+        # adjust joint positions to new CoM
+        new_joints3D = joints3D + self.importer.jointImgTo3D(com) - self.importer.jointImgTo3D(new_com)
+
+        # recalculate transformation matrix
+        trans = numpy.eye(3)
+        trans[0, 2] = -xstart2
+        trans[1, 2] = -ystart2
+        scale = numpy.eye(3) * scalePostX
+        scale[2, 2] = 1
+
+        off = numpy.eye(3)
+        off[0, 2] = 0
+        off[1, 2] = 0
+
+        return new_dpt, new_joints3D, new_com, numpy.dot(off, numpy.dot(scale, trans))
