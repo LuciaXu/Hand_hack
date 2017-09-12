@@ -67,7 +67,7 @@ def Datareader(config):
     print('Get {} training data.'.format(train_data.shape[0]))
     create_tf_record(train_data,train_gt3D,os.path.join(config.tfrecord_dir,config.train_tfrecords),config,train_com3D,train_M)
     print('create testing data and validation data')
-    Seq2 = ds.loadSequence('test', shuffle=True, rng=rng,docom=True,allJoints=True)
+    Seq2 = ds.loadSequence('test', shuffle=True, rng=rng,docom=True,allJoints=True,Nmax=10)
     testSeqs = [Seq2]
     testDataSet = NYUDataset(imgSeqs=testSeqs,val_prop=0.3)
     test_data, test_gt3D,val_data,val_gt3D,testconfig,test_com3D,val_com3D,test_M,val_M = testDataSet.imgStackDepthOnly('test')

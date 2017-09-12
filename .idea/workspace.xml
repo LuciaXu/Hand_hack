@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="3a75e1f5-2d76-49a7-97df-e3bc3f9fe966" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Datareader.py" afterPath="$PROJECT_DIR$/Datareader.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Importer.py" afterPath="$PROJECT_DIR$/Importer.py" />
     </list>
     <ignored path="Hand_hack.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -37,8 +36,8 @@
       <file leaf-file-name="Datareader.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Datareader.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="350">
-              <caret line="37" column="94" lean-forward="false" selection-start-line="37" selection-start-column="94" selection-end-line="37" selection-end-column="94" />
+            <state relative-caret-position="656">
+              <caret line="69" column="90" lean-forward="false" selection-start-line="69" selection-start-column="90" selection-end-line="69" selection-end-column="90" />
               <folding>
                 <element signature="e#0#32#0" expanded="true" />
               </folding>
@@ -685,8 +684,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Datareader.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="350">
-          <caret line="37" column="94" lean-forward="false" selection-start-line="37" selection-start-column="94" selection-end-line="37" selection-end-column="94" />
+        <state relative-caret-position="656">
+          <caret line="69" column="90" lean-forward="false" selection-start-line="69" selection-start-column="90" selection-end-line="69" selection-end-column="90" />
           <folding>
             <element signature="e#0#32#0" expanded="true" />
           </folding>
