@@ -8,9 +8,9 @@ class handConfig(object):
         self.model_input = ''
         self.train_summaries = ''
         self.tfrecord_dir = '/media/data_cifs/lakshmi/tfrecords/'
-        self.train_tfrecords = 'train.tfrecords'
-        self.val_tfrecords = 'val.tfrecords'
-        self.test_tfrecords = 'test.tfrecords'
+        self.train_tfrecords = 'train_challenge.tfrecords'
+        self.val_tfrecords = 'val_challenge.tfrecords'
+        self.test_tfrecords = 'test_challenge.tfrecords'
         self.vgg16_weight_path = pjoin(
             '/media/data_cifs/clicktionary/',
             'pretrained_weights',
@@ -34,5 +34,9 @@ class handConfig(object):
         self.keep_checkpoints = 100
 
         #training setting
-        self.num_classes = 108  # there are 36 * 3 (x/y/z) joint coors
+        '''
+        The challenge dataset has 21 joint annotations
+        21 (#joints) * 3 (x/y/z) = 63 training classes 
+        '''
+        self.num_classes = 63
         #self.num_classes = 42

@@ -9,8 +9,8 @@ import numpy as np
 
 def main():
     config = handConfig()
-    seqconfig = Datareader(config)
-    test_input_full(config,seqconfig)
+    #seqconfig = Datareader(config)
+    #test_input_full(config,seqconfig)
     return 0
 
 if __name__ == '__main__':
