@@ -7,7 +7,7 @@ class handConfig(object):
         self.model_output = ''
         self.model_input = ''
         self.train_summaries = ''
-        self.tfrecord_dir = ''
+        self.tfrecord_dir = '/media/data_cifs/lakshmi/tfrecords/'
         self.train_tfrecords = 'train.tfrecords'
         self.val_tfrecords = 'val.tfrecords'
         self.test_tfrecords = 'test.tfrecords'
