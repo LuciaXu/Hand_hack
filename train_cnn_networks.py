@@ -3,14 +3,15 @@ import re
 import time
 from datetime import datetime
 import tensorflow as tf
-from data.data_loader import inputs
+#from data.data_loader import inputs
+from data_loader import inputs
 from check_fun import showdepth, showImagefromArray,showImageLable,trans3DsToImg,showImageLableCom,showImageJoints,showImageJointsandResults
-from tf_fun import regression_mse, correlation, make_dir, \
-    fine_tune_prepare_layers, ft_optimizer_list
+#from tf_fun import regression_mse, correlation, make_dir, \
+#    fine_tune_prepare_layers, ft_optimizer_list
 from pose_evaluation import getMeanError,getMeanError_np,getMean_np,getMeanError_train
 import numpy as np
 import cPickle
-from checkpoint import  list_variables
+#from checkpoint import  list_variables
 
 
 def check_image_label(im, jts, com, M,cube_22,allJoints=False,line=False):
@@ -45,7 +46,7 @@ def train_model(config,seqconfig):
                                                             image_target_size=config.image_target_size,
                                                             label_shape=config.num_classes,
                                                             batch_size=config.val_batch)
-    with tf.device('/gpu:0'):
+    with tf.device('/gpu:2'):
         with tf.variable_scope("cnn") as scope:
             print("create training graph:")
             model=cnn_model_struct()
@@ -96,7 +97,7 @@ def train_model(config,seqconfig):
                 _,image_np,image_label,image_coms,image_Ms,tr_error,tr_loss,tr_loss_wd = sess.run([train_op,train_images,train_labels,com3Ds,Ms,train_error,loss,loss_wd])
                 print("step={},loss={},losswd={},error={} mm".format(step,tr_loss,tr_loss_wd,tr_error))
 
-                if step % 200 ==0:
+                if step % 20 ==0:
                     val_image_np, val_image_label, val_image_coms, val_image_Ms,v_error= sess.run(
                         [val_images, val_labels, val_com3Ds, val_Ms,val_error])
                     print("     val error={} mm".format(v_error))
@@ -109,6 +110,9 @@ def train_model(config,seqconfig):
                         first_v = False
                     else:
                         if v_error < val_min:
+                            print(os.path.join(
+                                config.model_output,
+                                'cnn_model' + str(step) +'.ckpt'))
                             saver.save(sess, os.path.join(
                                 config.model_output,
                                 'cnn_model' + str(step) +'.ckpt'), global_step=step)
