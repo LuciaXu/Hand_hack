@@ -187,12 +187,15 @@ class HandDetector(object):
         :param size: (x,y,z) extent of the source crop volume in mm
         :return: xstart, xend, ystart, yend, zstart, zend
         """
+        # reverse the direction of the coordinate system
+        fy = -1*self.fy
+
         zstart = com[2] - size[2] / 2.
         zend = com[2] + size[2] / 2.
         xstart = int(numpy.floor((com[0] * com[2] / self.fx - size[0] / 2.) / com[2]*self.fx))
         xend = int(numpy.floor((com[0] * com[2] / self.fx + size[0] / 2.) / com[2]*self.fx))
-        ystart = int(numpy.floor((com[1] * com[2] / self.fy - size[1] / 2.) / com[2]*self.fy))
-        yend = int(numpy.floor((com[1] * com[2] / self.fy + size[1] / 2.) / com[2]*self.fy))
+        ystart = int(numpy.floor((com[1] * com[2] / fy - size[1] / 2.) / com[2]*fy))
+        yend = int(numpy.floor((com[1] * com[2] / fy + size[1] / 2.) / com[2]*fy))
         return xstart, xend, ystart, yend, zstart, zend
 
 
@@ -304,10 +307,12 @@ class HandDetector(object):
 
         # calculate boundaries
         xstart, xend, ystart, yend, zstart, zend = self.comToBounds(com, size)
+        print (xstart,xend, ystart, yend, zstart, zend)
 
         # crop patch from source
         cropped = self.getCrop(self.dpt, xstart, xend, ystart, yend, zstart, zend)
         # ax.plot(com[0],com[1],marker='.')
+        print (cropped)
 
         #############
         # for simulating COM within cube

@@ -1,4 +1,4 @@
-from Importer import NYUImporter
+from Importer import ICCVChallengeImporter
 from dataset import NYUDataset
 import os
 import numpy as np
@@ -34,8 +34,8 @@ def Datareader(config):
     cwd = os.getcwd()
     print(cwd)
     rng = np.random.RandomState(23455)
-    ds = NYUImporter('/media/data_cifs/lu/NYU/dataset')
-    Seq1= ds.loadAugSequence('train', shuffle=True, rng=rng, docom=True,allJoints=True)
+    ds = ICCVChallengeImporter('/media/data_cifs/lu/Challenge/data/')
+    Seq1= ds.loadAugSequence('training', shuffle=True, rng=rng, docom=True,allJoints=True)
     trainSeqs = [Seq1]
 
     trainDataSet = NYUDataset(imgSeqs = trainSeqs)

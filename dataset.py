@@ -25,7 +25,7 @@ along with DeepPrior.  If not, see <http://www.gnu.org/licenses/>.
 import numpy
 import transformations
 from basetype import NamedImgSequence
-from Importer import NYUImporter
+from Importer import ICCVChallengeImporter
 from handdetector import HandDetector
 from check_fun import showdepth,showImageLable,trans3DsToImg,showImagefromArray,showImageJoints
 
