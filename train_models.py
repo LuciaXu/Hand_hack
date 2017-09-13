@@ -18,12 +18,13 @@ def check_image_label(im, jts, com, M,cube_22,allJoints=False,line=False):
     jt = jts.reshape((relen, 3))
     jtorig = jt * cube_22
     jcrop = trans3DsToImg(jtorig, com, M)
-    showImageJoints(im,jcrop,allJoints=allJoints,line=line)
+    #showImageJoints(im,jcrop,allJoints=allJoints,line=line)
+    showImageLable(im,jcrop)
 
 def test_input_full(config,seqconfig):
     train_data = os.path.join(config.tfrecord_dir, config.train_tfrecords)
     val_data = os.path.join(config.tfrecord_dir, config.val_tfrecords)
-    with tf.device('/cpu:1'):
+    with tf.device('/cpu:0'):
         train_images,train_labels,com3Ds,Ms = inputs(tfrecord_file = train_data,
                                            num_epochs=config.epochs,
                                            image_target_size = config.image_target_size,

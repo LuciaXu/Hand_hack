@@ -1,5 +1,5 @@
 from Importer import ICCVChallengeImporter
-from dataset import NYUDataset
+from dataset import ICCVChallengeDataset
 import os
 import numpy as np
 import tensorflow as tf
@@ -35,13 +35,12 @@ def Datareader(config):
     print(cwd)
     rng = np.random.RandomState(23455)
     ds = ICCVChallengeImporter('/media/data_cifs/lu/Challenge/data/')
-    Seq1= ds.loadAugSequence('training', shuffle=True, rng=rng, docom=True,allJoints=True)
+    Seq1= ds.loadAugSequence('training', shuffle=True, rng=rng, docom=True,allJoints=True, Nmax=20)
     trainSeqs = [Seq1]
 
-    trainDataSet = NYUDataset(imgSeqs = trainSeqs)
+    trainDataSet = ICCVChallengeDataset(imgSeqs = trainSeqs,val_prop=0.3)
     #trainDataSet.check()
-    train_data, train_gt3D, seqconfig, train_com3D,train_M = trainDataSet.imgStackDepthOnly('train')
-
+    train_data, train_gt3D, val_data,val_gt3D, seqconfig, train_com3D,val_com3D,train_M,val_M = trainDataSet.imgStackDepthOnly('training')
 
     # print("shape of train_data {}".format(train_data.shape))
     # print("shape of train lable {}".format(train_gt3D.shape))
@@ -66,15 +65,19 @@ def Datareader(config):
 
     print('Get {} training data.'.format(train_data.shape[0]))
     create_tf_record(train_data,train_gt3D,os.path.join(config.tfrecord_dir,config.train_tfrecords),config,train_com3D,train_M)
+
+
     print('create testing data and validation data')
+    '''
     Seq2 = ds.loadSequence('test', shuffle=True, rng=rng,docom=True,allJoints=True)
     testSeqs = [Seq2]
     testDataSet = NYUDataset(imgSeqs=testSeqs,val_prop=0.3)
     test_data, test_gt3D,val_data,val_gt3D,testconfig,test_com3D,val_com3D,test_M,val_M = testDataSet.imgStackDepthOnly('test')
+    '''
     create_tf_record(val_data, val_gt3D, os.path.join(config.tfrecord_dir, config.val_tfrecords), config, val_com3D,
                      val_M)
-    create_tf_record(test_data, test_gt3D, os.path.join(config.tfrecord_dir, config.test_tfrecords), config,test_com3D,test_M)
-    print('Get {} test data'.format(test_data.shape[0]))
+    #create_tf_record(test_data, test_gt3D, os.path.join(config.tfrecord_dir, config.test_tfrecords), config,test_com3D,test_M)
+    #print('Get {} test data'.format(test_data.shape[0]))
     print('Get {} validation data'.format(val_data.shape[0]))
 
     return seqconfig

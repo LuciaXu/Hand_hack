@@ -434,7 +434,7 @@ class ICCVChallengeImporter(Importer):
             gt3Dorig = np.asarray(jnts_xyz[image_index,eval_idxs,:],dtype=np.float32)
             # joints in image coordinates (UVD)
             gtorig = self.joints3DToImg(gt3Dorig)
-            showAnnotatedDepth(ICVLFrame(dpt, gtorig, gtorig, 0, gt3Dorig, gt3Dorig, 0, dptFileName, ''))
+            #showAnnotatedDepth(ICVLFrame(dpt, gtorig, gtorig, 0, gt3Dorig, gt3Dorig, 0, dptFileName, ''))
 
             '''
             The augmentation process starts here!
@@ -446,11 +446,13 @@ class ICCVChallengeImporter(Importer):
                 image_index += 1
                 continue
 
+            '''
             if allJoints:
-                hand_com = gtorig[-1]
+                hand_com = gtorig[0]
             else:
                 hand_com = gtorig[0]
-
+            '''
+            hand_com = np.sum(gtorig,axis=0)/self.numJoints
             try:
                 dpt, M, com = hd.cropArea3D(hand_com, size=config['cube'])
             except UserWarning:
@@ -469,6 +471,35 @@ class ICCVChallengeImporter(Importer):
                 gtcrop[joint, 1] = t[1]
                 gtcrop[joint, 2] = gtorig[joint, 2]
 
-            showAnnotatedDepth(ICVLFrame(dpt, gtorig, gtcrop, M, gt3Dorig, gt3Dcrop, com3D, dptFileName, ''))
+            #showAnnotatedDepth(ICVLFrame(dpt, gtorig, gtcrop, M, gt3Dorig, gt3Dcrop, com3D, dptFileName, ''))
+            '''
+            Performing the augmentations
+            '''
+            for aug in range(num_aug):
+                img, gt3DAug, com3dAug, cubeAug, M_aug = self.augmentCrop(dpt, gt3Dorig, com, hd, config['cube'],M)
+                jnts = trans3DsToImg(gt3DAug-com3D, com3D, M) #gt3DAug
+                #showAnnotatedDepth(ICVLFrame(img, gtorig, jnts, M, gt3Dorig, gt3DAug, com3dAug, dptFileName, ''))
+                data.append(ICVLFrame(img.astype(np.float32),gtorig,jnts,M,gt3Dorig,gt3DAug-com3D,com3D,dptFileName,''))
+
+            pbar.update(image_index)
+            image_index+=1
+
+            #early stop
+            if len(data)>=Nmax:
+                break
+
+        pbar.finish()
+        print("loaded {} samples.".format(len(data)))
+
+        if self.useCache:
+            print("Save cache data to {}".format(pickleCache))
+            f = open(pickleCache, 'wb')
+            cPickle.dump((seqName, data, config), f, protocol=cPickle.HIGHEST_PROTOCOL)
+            f.close()
+
+        # shuffle data
+        if shuffle and rng is not None:
+            print("shuffling")
+            rng.shuffle(data)
 
         return NamedImgSequence(seqName,data,config)

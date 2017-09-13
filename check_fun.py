@@ -6,10 +6,10 @@ import numpy as np
 
 
 def joint3DToImg(sample):
-    fx = 588.03
-    fy = 587.07
-    ux = 320.
-    uy = 240.
+    fx = 475.065948
+    fy = -475.06585
+    ux = 315.944855
+    uy = 245.287079
     ret = np.zeros((3,),np.float32)
     # convert to metric using f, see Thomson et.al.
     if sample[2] == 0.:

@@ -218,3 +218,14 @@ class NYUDataset(Dataset):
 
         self.lmi = NYUImporter(basepath)
 
+class ICCVChallengeDataset(Dataset):
+    def __init__(self, imgSeqs=None,basepath=None,val_prop=None):
+        """
+        constructor
+        """
+        super(ICCVChallengeDataset, self).__init__(imgSeqs,val_prop)
+        if basepath is None:
+            basepath = '/media/data_cifs/lu/Challenge/data/'
+
+        self.lmi = ICCVChallengeImporter(basepath)
+

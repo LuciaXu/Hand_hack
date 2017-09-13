@@ -307,12 +307,10 @@ class HandDetector(object):
 
         # calculate boundaries
         xstart, xend, ystart, yend, zstart, zend = self.comToBounds(com, size)
-        print (xstart,xend, ystart, yend, zstart, zend)
 
         # crop patch from source
         cropped = self.getCrop(self.dpt, xstart, xend, ystart, yend, zstart, zend)
         # ax.plot(com[0],com[1],marker='.')
-        print (cropped)
 
         #############
         # for simulating COM within cube
