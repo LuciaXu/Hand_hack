@@ -421,7 +421,7 @@ class NYUImporter(Importer):
             #print("com3D is {}".format(com3D))
 
             gt3Dcrop = gt3Dorig - com3D #normalize to com
-            #print gt3Dcrop
+
             gtcrop = np.zeros((gtorig.shape[0],3),np.float32)
             for joint in range(gtorig.shape[0]):
                 t = transformPoint2D(gtorig[joint],M)
@@ -440,7 +440,7 @@ class NYUImporter(Importer):
             #gtcrop_test = trans3DsToImg(gt3Dcrop,com3D,M)
             #showImageLable(dpt,gtcrop_test)
 
-
+            print(gt3Dcrop,com3D,M)
             data.append(ICVLFrame(dpt.astype(np.float32),gtorig,gtcrop,M,gt3Dorig,gt3Dcrop,com3D,dptFileName,'') )
             pbar.update(i)
             i+=1
@@ -480,18 +480,15 @@ class NYUImporter(Importer):
 
         if aug_modes[mode] == 'rot':
             imgD, new_joints3D, _ = hd.rotateHand(img.astype('float32'), cube, com, rot, gt3Dcrop, pad_value=0)
-            curLabel = new_joints3D / (cube[2] / 2.)
         elif aug_modes[mode] == 'scale':
             imgD, new_joints3D, cube, M = hd.scaleHand(img.astype('float32'),cube,com,sc,gt3Dcrop,M)
-            curLabel = new_joints3D / (cube[2] / 2.)
         elif aug_modes[mode] == 'trans':
             imgD, new_joints3D, com, M = hd.transHand(img.astype('float32'), cube,com,off,gt3Dcrop,M)
-            curLabel = new_joints3D / (cube[2] / 2.)
         else:
             print('Such an augmentation method has not be implemented')
             exit(0)
 
-        return imgD, curLabel, com, np.asarray(cube), M
+        return imgD, new_joints3D, com, np.asarray(cube), M
 
     def jntsXYZtoUVD(self, jnts_xyz):
         jnts_uvd = np.zeros((jnts_xyz.shape[0], 3), np.float32)
@@ -681,11 +678,11 @@ class NYUImporter(Importer):
             '''
             for aug in range(num_aug):
                 img, gt3DAug, com3dAug, cubeAug, M_aug = self.augmentCrop(dpt, gt3Dorig, com, hd, config['cube'],M)
-                jnts = trans3DsToImg(gt3DAug-com3D, com3D, M) #gt3DAug
+                gt3DAugCorrected = gt3DAug-com3D.transpose()
+                jnts = trans3DsToImg(gt3DAugCorrected, com3D, M)
                 #showAnnotatedDepth(ICVLFrame(img, gtorig, jnts, M, gt3Dorig, gt3DAug, com3dAug, dptFileName, ''))
-                data.append(ICVLFrame(img.astype(np.float32),gtorig,jnts,M,gt3Dorig,gt3DAug-com3D,com3D,dptFileName,''))
+                data.append(ICVLFrame(img.astype(np.float32),gtorig,jnts,M,gt3Dorig,gt3DAugCorrected,com3D,dptFileName,''))
 
-            #data.append(ICVLFrame(dpt.astype(np.float32), gtorig, gtcrop, M, gt3Dorig, gt3Dcrop, com3D, dptFileName, ''))
             pbar.update(i)
             i+=1
 
