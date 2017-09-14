@@ -3,14 +3,13 @@ import re
 import time
 from datetime import datetime
 import tensorflow as tf
-from data.data_loader import inputs
+from data_loader import inputs
 from check_fun import showdepth, showImagefromArray,showImageLable,trans3DsToImg,showImageLableCom,showImageJoints,showImageJointsandResults
-from tf_fun import regression_mse, correlation, make_dir, \
-    fine_tune_prepare_layers, ft_optimizer_list
+
 from pose_evaluation import getMeanError,getMeanError_np,getMean_np,getMeanError_train
 import numpy as np
 import cPickle
-from checkpoint import  list_variables
+
 
 def save_result_image(images_np,images_coms,images_Ms,labels_np,images_results,cube_22,name,line=True):
     val_im = images_np[0].reshape([128, 128])
@@ -39,27 +38,17 @@ def train_model(config,seqconfig):
                                                             label_shape=config.num_classes,
                                                             batch_size=config.val_batch)
         label_shaped = tf.reshape(train_labels, [config.train_batch, config.num_classes / 3, 3])
-        split_lable = tf.split(label_shaped, 36, axis=1)
+        split_lable = tf.split(label_shaped, 21, axis=1)
         P_label_shaped = tf.concat(
-            [split_lable[0], split_lable[1], split_lable[2], split_lable[3], split_lable[4], split_lable[5],
-             split_lable[29], split_lable[30], split_lable[31], split_lable[32], split_lable[33], split_lable[34],
-             split_lable[35]], axis=1)
+            [split_lable[0], split_lable[5], split_lable[18], split_lable[19], split_lable[20]], axis=1)
         R_label_shaped = tf.concat(
-            [split_lable[6], split_lable[7], split_lable[8], split_lable[9], split_lable[10], split_lable[11],
-             split_lable[29], split_lable[30], split_lable[31], split_lable[32], split_lable[33], split_lable[34],
-             split_lable[35]], axis=1)
+            [split_lable[0], split_lable[4], split_lable[15], split_lable[16], split_lable[17]], axis=1)
         M_label_shaped = tf.concat(
-            [split_lable[12], split_lable[13], split_lable[14], split_lable[15], split_lable[16], split_lable[17],
-             split_lable[29], split_lable[30], split_lable[31], split_lable[32], split_lable[33], split_lable[34],
-             split_lable[35]], axis=1)
+            [split_lable[0], split_lable[3], split_lable[12], split_lable[13], split_lable[14]], axis=1)
         I_label_shaped = tf.concat(
-            [split_lable[18], split_lable[19], split_lable[20], split_lable[21], split_lable[22], split_lable[23],
-             split_lable[29], split_lable[30], split_lable[31], split_lable[32], split_lable[33], split_lable[34],
-             split_lable[35]], axis=1)
+            [split_lable[0], split_lable[2], split_lable[9], split_lable[10], split_lable[11]], axis=1)
         T_label_shaped = tf.concat(
-            [split_lable[24], split_lable[25], split_lable[26], split_lable[27], split_lable[28],
-             split_lable[29], split_lable[30], split_lable[31], split_lable[32], split_lable[33], split_lable[34],
-             split_lable[35]], axis=1)
+            [split_lable[0], split_lable[1], split_lable[6], split_lable[7], split_lable[8],], axis=1)
         P_label=tf.reshape(P_label_shaped,[config.train_batch,P_label_shaped.get_shape().as_list()[1]*3])
         R_label = tf.reshape(R_label_shaped, [config.train_batch, R_label_shaped.get_shape().as_list()[1] * 3])
         M_label = tf.reshape(M_label_shaped, [config.train_batch, M_label_shaped.get_shape().as_list()[1] * 3])
@@ -69,34 +58,15 @@ def train_model(config,seqconfig):
         val_label_shaped = tf.reshape(val_labels, [config.val_batch, config.num_classes / 3, 3])
         val_split_lable = tf.split(val_label_shaped, 36, axis=1)
         val_P_label_shaped = tf.concat(
-            [val_split_lable[0], val_split_lable[1], val_split_lable[2], val_split_lable[3], val_split_lable[4],
-             val_split_lable[5],
-             val_split_lable[29], val_split_lable[30], val_split_lable[31], val_split_lable[32], val_split_lable[33],
-             val_split_lable[34],
-             val_split_lable[35]], axis=1)
+            [val_split_lable[0], val_split_lable[5], val_split_lable[18], val_split_lable[19], val_split_lable[20]], axis=1)
         val_R_label_shaped = tf.concat(
-            [val_split_lable[6], val_split_lable[7], val_split_lable[8], val_split_lable[9], val_split_lable[10],
-             val_split_lable[11],
-             val_split_lable[29], val_split_lable[30], val_split_lable[31], val_split_lable[32], val_split_lable[33],
-             val_split_lable[34],
-             val_split_lable[35]], axis=1)
+            [val_split_lable[0], val_split_lable[4], val_split_lable[15], val_split_lable[16], val_split_lable[17]], axis=1)
         val_M_label_shaped = tf.concat(
-            [val_split_lable[12], val_split_lable[13], val_split_lable[14], val_split_lable[15], val_split_lable[16],
-             val_split_lable[17],
-             val_split_lable[29], val_split_lable[30], val_split_lable[31], val_split_lable[32], val_split_lable[33],
-             val_split_lable[34],
-             val_split_lable[35]], axis=1)
+            [val_split_lable[0], val_split_lable[3], val_split_lable[12], val_split_lable[13], val_split_lable[14]], axis=1)
         val_I_label_shaped = tf.concat(
-            [val_split_lable[18], val_split_lable[19], val_split_lable[20], val_split_lable[21], val_split_lable[22],
-             val_split_lable[23],
-             val_split_lable[29], val_split_lable[30], val_split_lable[31], val_split_lable[32], val_split_lable[33],
-             val_split_lable[34],
-             val_split_lable[35]], axis=1)
+            [val_split_lable[0], val_split_lable[2], val_split_lable[9], val_split_lable[10], val_split_lable[11]], axis=1)
         val_T_label_shaped = tf.concat(
-            [val_split_lable[24], val_split_lable[25], val_split_lable[26], val_split_lable[27], val_split_lable[28],
-             val_split_lable[29], val_split_lable[30], val_split_lable[31], val_split_lable[32], val_split_lable[33],
-             val_split_lable[34],
-             val_split_lable[35]], axis=1)
+            [val_split_lable[0], val_split_lable[1], val_split_lable[6], val_split_lable[7], val_split_lable[8]], axis=1)
         val_P_label = tf.reshape(val_P_label_shaped, [config.val_batch, val_P_label_shaped.get_shape().as_list()[1] * 3])
         val_R_label = tf.reshape(val_R_label_shaped, [config.val_batch, val_R_label_shaped.get_shape().as_list()[1] * 3])
         val_M_label = tf.reshape(val_M_label_shaped, [config.val_batch, val_M_label_shaped.get_shape().as_list()[1] * 3])
@@ -261,7 +231,7 @@ def test_model(config,seqconfig):
     with tf.device('/gpu:1'):
         with tf.variable_scope("cnn") as scope:
             model=dense_hier_model_struct()
-            model.build(images, config.num_classes, 13*3,13*3,13*3,13*3,12*3,train_mode=False)
+            model.build(images, config.num_classes, 5*3,5*3,5*3,5*3,5*3,train_mode=False)
             labels_shaped = tf.reshape(labels, [config.num_classes / 3, 3]) * \
                                 seqconfig['cube'][2] / 2.
             results_shaped = tf.reshape(model.output, [config.num_classes / 3, 3]) * \

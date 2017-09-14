@@ -35,7 +35,7 @@ def Datareader(config):
     print(cwd)
     rng = np.random.RandomState(23455)
     ds = ICCVChallengeImporter('/media/data_cifs/lu/Challenge/data/')
-    Seq1= ds.loadAugSequence('training', shuffle=True, rng=rng, docom=True,allJoints=True, Nmax=20)
+    Seq1= ds.loadAugSequence('training', shuffle=True, rng=rng, docom=True,allJoints=True,num_aug=1)
     trainSeqs = [Seq1]
 
     trainDataSet = ICCVChallengeDataset(imgSeqs = trainSeqs,val_prop=0.3)

@@ -3,11 +3,11 @@ from os.path import join as pjoin
 class handConfig(object):
     def __init__(self):
         #dir setting
-        self.results_dir = ''
-        self.model_output = ''
+        self.results_dir = '/media/data_cifs/lu/Challenge/result/dense_hier_model/'
+        self.model_output = pjoin(self.results_dir, 'model_output')
         self.model_input = ''
-        self.train_summaries = ''
-        self.tfrecord_dir = '/media/data_cifs/lakshmi/tfrecords/'
+        self.train_summaries = pjoin(self.results_dir, 'summaries')
+        self.tfrecord_dir = '/media/data_cifs/lu/Challenge/tfrecords/'
         self.train_tfrecords = 'train_challenge.tfrecords'
         self.val_tfrecords = 'val_challenge.tfrecords'
         self.test_tfrecords = 'test_challenge.tfrecords'

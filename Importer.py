@@ -270,7 +270,7 @@ class ICVLImporter(Importer):
 
 
 class ICCVChallengeImporter(Importer):
-    def __init__(self,path,useCache = True,cacheDir = '/media/data_cifs/lakshmi/cache'):
+    def __init__(self,path,useCache = True,cacheDir = '/media/data_cifs/lu/Challenge/cache'):
 
         super(ICCVChallengeImporter,self).__init__(475.065948,-475.06585,315.944855,245.287079)
 
