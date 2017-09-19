@@ -2,7 +2,7 @@
 from config import handConfig
 from Datareader import Datareader
 from train_models import test_input_full,test_input_tree
-from train_cnn_networks import train_model
+from train_cnn_networks import train_model, test_model
 
 import os
 import numpy as np
@@ -13,7 +13,7 @@ def main():
     config = handConfig()
     seqconfig = Datareader(config)
     #test_input_full(config,seqconfig)
-    train_model(config,seqconfig)
+    #train_model(config,seqconfig)
     test_model(config,seqconfig)
 
     return 0
