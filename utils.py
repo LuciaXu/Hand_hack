@@ -87,8 +87,13 @@ def rotatePoint2D(p1, center, angle):
         ps[0:2] += center[0:2]
         return ps
 
+'''
+TODO: Cube should be a parameter
+currenty we assume cube to be [300,300,300]
+'''
 def rotateHand(com, rot, joints3D, dims):
     """
+    Please do note that this function is different from the namesake in handdetector.py!
     Rotate hand virtually in the image plane by a given angle
     :param com: original center of mass, in **3D** coordinates (x,y,z)
     :param rot: rotation angle in deg
@@ -96,38 +101,30 @@ def rotateHand(com, rot, joints3D, dims):
     :param dims: dimensions of the image
     :return: new 3D joint coordinates
     """
-    '''
-    TODO: Cube should be a parameter
-    currenty we assume cube to be [300,300,300]
-    '''
-    #print ('COM:',com)
+
     cubez = 300
+    # rescale joints
     joints3D = joints3D*(cubez/2.0)
-    #print ('In rotate hand function:')
-
+    # get the uvd coordinates of the center of mass
     comUVD = joint3DToImg(com)
-
     # if rot is 0, nothing to do
     if np.allclose(rot, 0.):
         joints3D = np.clip(np.asarray(joints3D, dtype='float32') / (cubez/2.0), -1, 1)
         return joints3D
-
+    # For a non-zero rotation!
     rot = np.mod(rot, 360)
+    # get the 2D rotation matrix
     M = cv2.getRotationMatrix2D((dims[1] // 2, dims[0] // 2), -rot, 1)
-
-    #com3D = jointImgTo3D(com)
+    # translate to COM and project on to the image
     joint_2D = joints3DToImg(joints3D + com)
-    #print ('Joints 2d',joint_2D)
 
+    # rotate every joint in plane
     data_2D = np.zeros_like(joint_2D)
     for k in xrange(data_2D.shape[0]):
-        data_2D[k] = rotatePoint2D(joint_2D[k], comUVD[0:2], rot) ####
-    new_joints3D = (jointsImgTo3D(data_2D) - com) #++++
-    #print('NJ:',new_joints3D)
-    ####
-    #new_joints3D = new_joints3D - com
-    #print('NJ:',new_joints3D)
-
+        data_2D[k] = rotatePoint2D(joint_2D[k], comUVD[0:2], rot)
+    # inverse translate
+    new_joints3D = (jointsImgTo3D(data_2D) - com)
+    # clip the limits of the joints
     new_joints3D = np.clip(np.asarray(new_joints3D, dtype='float32') / (cubez / 2.0), -1, 1)
-    ####
+
     return new_joints3D

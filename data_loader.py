@@ -4,9 +4,17 @@ import os
 import cv2
 from utils import *
 
+def deg2rad(deg):
+    return deg * (np.pi/180.0)
 
 def modifySample(label,image,com3D,M,sigma_sc=0.05,sigma_com=5.):
+
+    # Keep the original samples once in a while
+    if (np.random.randint(32) == 0):
+        return label,image,com3D,M
+
     aug_modes = ['rot', 'scale', 'trans']
+
     # in plane rotation angle
     rot = np.random.uniform(0, 360)
     # scaling factor
@@ -16,21 +24,19 @@ def modifySample(label,image,com3D,M,sigma_sc=0.05,sigma_com=5.):
     # pick an augmentation method
     #mode = np.random.randint(0, len(aug_modes))
     mode=0
-    rot = 10
+
     dim=image.get_shape().as_list()
 
     label_dims = label.get_shape().as_list()
     label = tf.reshape(label,[label_dims[0]/3, 3])
 
-    # check if rotation is done clockwise or anticlockwise
+    '''
+    In-plane rotations. Do note that tensorflow contrib function takes in rotation angle in radians
+    '''
     if aug_modes[mode]=='rot':
-        '''
-        Do note that tensorflow contrib function takes in rotation angle in radians
-        '''
-        image = tf.contrib.image.rotate(image,-rot* (3.1415/180.0))
+        image = tf.contrib.image.rotate(image,-deg2rad(rot))
         r = tf.constant(rot)
         label = tf.py_func(rotateHand,[com3D, r, label, dim],[tf.float32])
-        #label = tf.subtract(label,com3D)
 
     return label,image,com3D,M
 

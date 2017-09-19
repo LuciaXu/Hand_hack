@@ -95,24 +95,18 @@ def train_model(config,seqconfig):
         try:
             while not coord.should_stop():
 
-                gt = train_labels.eval()
-                gt_0 = gt[0]
-                #print(gt_0)
-                imgs = train_images.eval()
-                img_0 = imgs[0]
-                #print(img_0)
-                coms = com3Ds.eval()
-                coms_0 = coms[0]
-                ms = Ms.eval()
-                ms_0 = ms[0]
-                im = img_0.reshape([128, 128])
-                gt0 = gt_0.reshape(36,3)
-                gt0 = gt0 * 150
-                #print (gt0,coms_0,ms_0)
-                jcrop = trans3DsToImg(gt0, coms_0, ms_0)
-
-                showJointsOnly(im,jcrop)
-                print(gt.shape)
+                if (0):
+                    gt = train_labels.eval()
+                    imgs = train_images.eval()
+                    img_0 = imgs[0]
+                    coms = com3Ds.eval()
+                    coms_0 = coms[0]
+                    ms = Ms.eval()
+                    ms_0 = ms[0]
+                    im = img_0.reshape([128, 128])
+                    gt0 = gt[0].reshape(36,3)*150
+                    jcrop = trans3DsToImg(gt0, coms_0, ms_0)
+                    showJointsOnly(im,jcrop)
 
                 _,image_np,image_label,image_coms,image_Ms,tr_error,tr_loss,tr_loss_wd = sess.run([train_op,train_images,train_labels,com3Ds,Ms,train_error,loss,loss_wd])
                 print("step={},loss={},losswd={},error={} mm".format(step,tr_loss,tr_loss_wd,tr_error))
