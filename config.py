@@ -18,7 +18,7 @@ class handConfig(object):
 
         #model setting
         self.model_type = 'vgg_regression_model_4fc'
-        self.epochs = 300
+        self.epochs = 20
         self.image_target_size = [128,128,1]
         self.label_shape = 36
         self.train_batch = 64

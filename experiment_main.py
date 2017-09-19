@@ -14,6 +14,7 @@ def main():
     seqconfig = Datareader(config)
     #test_input_full(config,seqconfig)
     train_model(config,seqconfig)
+    test_model(config,seqconfig)
 
     return 0
 
