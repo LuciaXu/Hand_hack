@@ -1,0 +1,133 @@
+'''
+A set of utility functions for manipulation of annotated hand data
+'''
+import numpy as np
+import cv2
+
+'''
+These are camera parameter for the NYU Hand dataset.
+TODO: Import these values from the dataset class
+'''
+fx = 588.03
+fy = 587.07
+ux = 320.
+uy = 240.
+
+def jointsImgTo3D(sample):
+    '''
+    U-V-D coordinate system to X-Y-Z coordinate system
+    :param sample: uvd of a set of joints
+    :return: xyz of the corresponding joints
+    '''
+    ret = np.zeros((sample.shape[0], 3), np.float32)
+    for i in range(sample.shape[0]):
+        ret[i] = jointImgTo3D(sample[i])
+    return ret
+
+
+def jointImgTo3D(sample):
+    '''
+    U-V-D coordinate system to X-Y-Z coordinate system
+    :param sample: uvd of a single joint
+    :return: xyz of the joint
+    '''
+    ret = np.zeros((3,), np.float32)
+    # convert to metric using f, see Thomson et al.
+    ret[0] = (sample[0] - ux) * sample[2] / fx
+    ret[1] = (uy - sample[1]) * sample[2] / fy
+    ret[2] = sample[2]
+    return ret
+
+
+def joints3DToImg(sample):
+    '''
+    X-Y-Z coordinate system to U-V-D coordinate system
+    :param sample: xyz of a group of joints
+    :return: uvd of the corresponding joints
+    '''
+    ret = np.zeros((sample.shape[0], 3), np.float32)
+    for i in range(sample.shape[0]):
+        ret[i] = joint3DToImg(sample[i])
+    return ret
+
+
+def joint3DToImg(sample):
+    '''
+    X-Y-Z coordinate system to U-V-D coordinate system
+    :param sample: xyz of a single joint
+    :return: uvd of the specified joint
+    '''
+    ret = np.zeros((3,), np.float32)
+    # convert to metric using f, see Thomson et.al.
+    if sample[2] == 0.:
+        ret[0] = ux
+        ret[1] = uy
+        return ret
+    ret[0] = sample[0] / sample[2] * fx + ux
+    ret[1] = uy - sample[1] / sample[2] * fy
+    ret[2] = sample[2]
+    return ret
+
+def rotatePoint2D(p1, center, angle):
+        """
+        Rotate a point in 2D around center
+        :param p1: point in 2D (u,v,d)
+        :param center: 2D center of rotation
+        :param angle: angle in deg
+        :return: rotated point
+        """
+        alpha = angle * np.pi / 180.
+        pp = p1.copy()
+        pp[0:2] -= center[0:2]
+        pr = np.zeros_like(pp)
+        pr[0] = pp[0] * np.cos(alpha) - pp[1] * np.sin(alpha)
+        pr[1] = pp[0] * np.sin(alpha) + pp[1] * np.cos(alpha)
+        pr[2] = pp[2]
+        ps = pr
+        ps[0:2] += center[0:2]
+        return ps
+
+def rotateHand(com, rot, joints3D, dims):
+    """
+    Rotate hand virtually in the image plane by a given angle
+    :param com: original center of mass, in **3D** coordinates (x,y,z)
+    :param rot: rotation angle in deg
+    :param joints3D: original joint coordinates, in 3D coordinates (x,y,z)
+    :param dims: dimensions of the image
+    :return: new 3D joint coordinates
+    """
+    '''
+    TODO: Cube should be a parameter
+    currenty we assume cube to be [300,300,300]
+    '''
+    #print ('COM:',com)
+    cubez = 300
+    joints3D = joints3D*(cubez/2.0)
+    #print ('In rotate hand function:')
+
+    comUVD = joint3DToImg(com)
+
+    # if rot is 0, nothing to do
+    if np.allclose(rot, 0.):
+        joints3D = np.clip(np.asarray(joints3D, dtype='float32') / (cubez/2.0), -1, 1)
+        return joints3D
+
+    rot = np.mod(rot, 360)
+    M = cv2.getRotationMatrix2D((dims[1] // 2, dims[0] // 2), -rot, 1)
+
+    #com3D = jointImgTo3D(com)
+    joint_2D = joints3DToImg(joints3D + com)
+    #print ('Joints 2d',joint_2D)
+
+    data_2D = np.zeros_like(joint_2D)
+    for k in xrange(data_2D.shape[0]):
+        data_2D[k] = rotatePoint2D(joint_2D[k], comUVD[0:2], rot) ####
+    new_joints3D = (jointsImgTo3D(data_2D) - com) #++++
+    #print('NJ:',new_joints3D)
+    ####
+    #new_joints3D = new_joints3D - com
+    #print('NJ:',new_joints3D)
+
+    new_joints3D = np.clip(np.asarray(new_joints3D, dtype='float32') / (cubez / 2.0), -1, 1)
+    ####
+    return new_joints3D
