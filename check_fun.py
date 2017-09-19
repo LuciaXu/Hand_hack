@@ -178,6 +178,12 @@ def showImageLableCom(dpt,lable,com):
     ax.format_coord = format_coord
     plt.show()
 
+def showJointsOnly(dpt,lable):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.imshow(dpt, cmap=matplotlib.cm.jet, interpolation='nearest')
+    ax.scatter(lable[:, 0], lable[:, 1], c='r')
+    plt.show()
 
 def showImageJoints(dpt,lable,save=False,imagename=None,allJoints=False,line=True):
     fig = plt.figure()

@@ -623,11 +623,11 @@ class HandDetector(object):
             return dpt, joints3D, rot
 
         rot = numpy.mod(rot, 360)
-
+        print(dpt.shape)
         M = cv2.getRotationMatrix2D((dpt.shape[1] // 2, dpt.shape[0] // 2), -rot, 1)
         new_dpt = cv2.warpAffine(dpt, M, (dpt.shape[1], dpt.shape[0]), flags=cv2.INTER_NEAREST,
                                  borderMode=cv2.BORDER_CONSTANT, borderValue=pad_value)
-
+        print(M)
         com3D = self.importer.jointImgTo3D(com)
         joint_2D = self.importer.joints3DToImg(joints3D + com3D)
         data_2D = numpy.zeros_like(joint_2D)

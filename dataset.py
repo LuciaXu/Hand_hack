@@ -120,7 +120,7 @@ class Dataset(object):
                         imgD /= (imgSeq.config['cube'][2] / 2.)
 
                     imgStack[i] = imgD
-
+                    #print(imgSeq.data[i].gt3Dcrop)
                     labelStack[i] = numpy.clip(numpy.asarray(imgSeq.data[i].gt3Dcrop, dtype='float32') / (imgSeq.config['cube'][2] / 2.), -1, 1)
                     com3DStack[i] = imgSeq.data[i].com
                     MStack[i] = imgSeq.data[i].T

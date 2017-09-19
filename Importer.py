@@ -376,27 +376,13 @@ class NYUImporter(Importer):
                 gt3Dorig[jt,0] = joints3D[line,jj,0]
                 gt3Dorig[jt,1] = joints3D[line,jj,1]
                 gt3Dorig[jt,2] = joints3D[line,jj,2]
-
+                jt=jt+1
                 # #check if joint2D can be translated to joint3d by jointsImgto3D
                 # print gtorig[jj]
                 # gttrans = self.jointImgTo3D(gtorig[jj])
                 # print(gttrans)
                 # print(gt3Dorig[jj])
 
-                jt +=1
-                # # joints3D can be translated to joints2D by joint3DToImg
-                # if jj is 0:
-                #     print gt3Dorig[jj]
-                #     gttrans = self.joint3DToImg(gt3Dorig[jj])
-                #     print gttrans
-                #     print gtorig[jj]
-
-
-
-
-
-            #print gt3Dorig
-            #showAnnotatedDepth(ICVLFrame(dpt, gtorig, gtorig, 0, gt3Dorig, gt3Dorig, 0, dptFileName, ''))
 
             # Detect hand
             hd = HandDetector(dpt, self.fx, self.fy, importer = self)
@@ -420,6 +406,7 @@ class NYUImporter(Importer):
             #print("gt3Dorig 34 is{}".format(gt3Dorig[34]))
             #print("com3D is {}".format(com3D))
 
+            #print(gt3Dorig)
             gt3Dcrop = gt3Dorig - com3D #normalize to com
 
             gtcrop = np.zeros((gtorig.shape[0],3),np.float32)
@@ -440,7 +427,7 @@ class NYUImporter(Importer):
             #gtcrop_test = trans3DsToImg(gt3Dcrop,com3D,M)
             #showImageLable(dpt,gtcrop_test)
 
-            print(gt3Dcrop,com3D,M)
+            #print(gt3Dcrop,com3D,M)
             data.append(ICVLFrame(dpt.astype(np.float32),gtorig,gtcrop,M,gt3Dorig,gt3Dcrop,com3D,dptFileName,'') )
             pbar.update(i)
             i+=1

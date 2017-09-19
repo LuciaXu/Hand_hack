@@ -1,7 +1,38 @@
 import tensorflow as tf
 import numpy as np
 import os
+import cv2
+from utils import *
 
+
+def modifySample(label,image,com3D,M,sigma_sc=0.05,sigma_com=5.):
+    aug_modes = ['rot', 'scale', 'trans']
+    # in plane rotation angle
+    rot = np.random.uniform(0, 360)
+    # scaling factor
+    sc = abs(1. + np.random.randn() * sigma_sc)
+    # translation offset
+    off = np.random.randn(3) * sigma_com
+    # pick an augmentation method
+    #mode = np.random.randint(0, len(aug_modes))
+    mode=0
+    rot = 10
+    dim=image.get_shape().as_list()
+
+    label_dims = label.get_shape().as_list()
+    label = tf.reshape(label,[label_dims[0]/3, 3])
+
+    # check if rotation is done clockwise or anticlockwise
+    if aug_modes[mode]=='rot':
+        '''
+        Do note that tensorflow contrib function takes in rotation angle in radians
+        '''
+        image = tf.contrib.image.rotate(image,-rot* (3.1415/180.0))
+        r = tf.constant(rot)
+        label = tf.py_func(rotateHand,[com3D, r, label, dim],[tf.float32])
+        #label = tf.subtract(label,com3D)
+
+    return label,image,com3D,M
 
 def read_and_decode(filename_queue,target_size,label_shape):
     reader = tf.TFRecordReader()
@@ -12,6 +43,7 @@ def read_and_decode(filename_queue,target_size,label_shape):
         'com3D':tf.FixedLenFeature([],tf.string),
         'M':tf.FixedLenFeature([],tf.string)
     })
+    print('in read and decode')
     #convert from a scalor string tensor
     label = tf.decode_raw(features['label'],tf.float32)
 
@@ -26,6 +58,17 @@ def read_and_decode(filename_queue,target_size,label_shape):
     label.set_shape(label_shape)
     com3D = tf.reshape(com3D,(3,))
     M=tf.reshape(M,(3,3))
+
+    '''
+    Augmentations happen here! Take each sample and pick an aug mode 
+    and modify the image and the respective label
+    '''
+    label,image,com3D,M = modifySample(label,image,com3D,M)
+    label = tf.reshape(label,[label_shape,])
+    '''
+    Ends here!
+    '''
+
     #print("com3D shape:{}".format(com3D.get_shape().as_list()))
     #print("M shape:{}".format(M.get_shape().as_list()))
 
@@ -39,6 +82,7 @@ def read_and_decode(filename_queue,target_size,label_shape):
 
 
 def inputs(tfrecord_file,num_epochs,image_target_size,label_shape,batch_size):
+    print('in input!')
     with tf.name_scope('input'):
         if os.path.exists(tfrecord_file) is False:
             print("{} not exists".format(tfrecord_file))

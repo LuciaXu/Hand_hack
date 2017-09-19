@@ -5,7 +5,7 @@ from datetime import datetime
 import tensorflow as tf
 #from data.data_loader import inputs
 from data_loader import inputs
-from check_fun import showdepth, showImagefromArray,showImageLable,trans3DsToImg,showImageLableCom,showImageJoints,showImageJointsandResults
+from check_fun import showdepth, showImagefromArray,showImageLable,trans3DsToImg,showImageLableCom,showImageJoints,showImageJointsandResults, showJointsOnly
 #from tf_fun import regression_mse, correlation, make_dir, \
 #    fine_tune_prepare_layers, ft_optimizer_list
 from pose_evaluation import getMeanError,getMeanError_np,getMean_np,getMeanError_train
@@ -46,7 +46,7 @@ def train_model(config,seqconfig):
                                                             image_target_size=config.image_target_size,
                                                             label_shape=config.num_classes,
                                                             batch_size=config.val_batch)
-    with tf.device('/gpu:2'):
+    with tf.device('/gpu:0'):
         with tf.variable_scope("cnn") as scope:
             print("create training graph:")
             model=cnn_model_struct()
@@ -94,6 +94,26 @@ def train_model(config,seqconfig):
         threads = tf.train.start_queue_runners(coord=coord)
         try:
             while not coord.should_stop():
+
+                gt = train_labels.eval()
+                gt_0 = gt[0]
+                #print(gt_0)
+                imgs = train_images.eval()
+                img_0 = imgs[0]
+                #print(img_0)
+                coms = com3Ds.eval()
+                coms_0 = coms[0]
+                ms = Ms.eval()
+                ms_0 = ms[0]
+                im = img_0.reshape([128, 128])
+                gt0 = gt_0.reshape(36,3)
+                gt0 = gt0 * 150
+                #print (gt0,coms_0,ms_0)
+                jcrop = trans3DsToImg(gt0, coms_0, ms_0)
+
+                showJointsOnly(im,jcrop)
+                print(gt.shape)
+
                 _,image_np,image_label,image_coms,image_Ms,tr_error,tr_loss,tr_loss_wd = sess.run([train_op,train_images,train_labels,com3Ds,Ms,train_error,loss,loss_wd])
                 print("step={},loss={},losswd={},error={} mm".format(step,tr_loss,tr_loss_wd,tr_error))
 

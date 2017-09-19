@@ -34,9 +34,9 @@ def Datareader(config):
     cwd = os.getcwd()
     print(cwd)
     rng = np.random.RandomState(23455)
-    ds = NYUImporter('/media/data_cifs/lu/NYU/dataset',useCache=True)
-    Seq1= ds.loadAugSequence('train', shuffle=True, rng=rng, docom=True,allJoints=True,num_aug=32)
-    #Seq1 = ds.loadSequence('train', shuffle=True, rng=rng, docom=True, allJoints=True, Nmax=1)
+    ds = NYUImporter('/media/data_cifs/lu/NYU/dataset',useCache=False)
+    #Seq1= ds.loadAugSequence('train', shuffle=True, rng=rng, docom=True,allJoints=True,num_aug=1,Nmax=1)
+    Seq1 = ds.loadSequence('train', shuffle=True, rng=rng, docom=True, allJoints=True, Nmax=1)
     trainSeqs = [Seq1]
 
     trainDataSet = NYUDataset(imgSeqs = trainSeqs)
@@ -68,12 +68,11 @@ def Datareader(config):
     print('Get {} training data.'.format(train_data.shape[0]))
     create_tf_record(train_data,train_gt3D,os.path.join(config.tfrecord_dir,config.train_tfrecords),config,train_com3D,train_M)
     print('create testing data and validation data')
-    Seq2 = ds.loadSequence('test', shuffle=True, rng=rng,docom=True,allJoints=True)
+    Seq2 = ds.loadSequence('test', shuffle=True, rng=rng,docom=True,allJoints=True,Nmax=4)
     testSeqs = [Seq2]
     testDataSet = NYUDataset(imgSeqs=testSeqs,val_prop=0.3)
     test_data, test_gt3D,val_data,val_gt3D,testconfig,test_com3D,val_com3D,test_M,val_M = testDataSet.imgStackDepthOnly('test')
-    create_tf_record(val_data, val_gt3D, os.path.join(config.tfrecord_dir, config.val_tfrecords), config, val_com3D,
-                     val_M)
+    create_tf_record(val_data, val_gt3D, os.path.join(config.tfrecord_dir, config.val_tfrecords), config, val_com3D,val_M)
     create_tf_record(test_data, test_gt3D, os.path.join(config.tfrecord_dir, config.test_tfrecords), config,test_com3D,test_M)
     print('Get {} test data'.format(test_data.shape[0]))
     print('Get {} validation data'.format(val_data.shape[0]))
