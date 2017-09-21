@@ -91,7 +91,7 @@ def rotatePoint2D(p1, center, angle):
 TODO: Cube should be a parameter
 currenty we assume cube to be [300,300,300]
 '''
-def rotateHand(com, rot, joints3D, dims):
+def rotateHand(image, com, joints3D, dims):
     """
     Please do note that this function is different from the namesake in handdetector.py!
     Rotate hand virtually in the image plane by a given angle
@@ -101,6 +101,10 @@ def rotateHand(com, rot, joints3D, dims):
     :param dims: dimensions of the image
     :return: new 3D joint coordinates
     """
+    rot = np.random.uniform(0, 360)
+    #rot = 273
+    #rot = 33
+    print('rot1 %f'%rot)
 
     cubez = 300
     # rescale joints
@@ -111,13 +115,18 @@ def rotateHand(com, rot, joints3D, dims):
     if np.allclose(rot, 0.):
         joints3D = np.clip(np.asarray(joints3D, dtype='float32') / (cubez/2.0), -1, 1)
         return joints3D
+
     # For a non-zero rotation!
     rot = np.mod(rot, 360)
     # get the 2D rotation matrix
     M = cv2.getRotationMatrix2D((dims[1] // 2, dims[0] // 2), -rot, 1)
+
+    image = cv2.warpAffine(image, M, (dims[1], dims[0]), flags=cv2.INTER_NEAREST,
+                             borderMode=cv2.BORDER_CONSTANT, borderValue=1)
+
     # translate to COM and project on to the image
     joint_2D = joints3DToImg(joints3D + com)
-
+    print('rot2 %f' % rot)
     # rotate every joint in plane
     data_2D = np.zeros_like(joint_2D)
     for k in xrange(data_2D.shape[0]):
@@ -127,4 +136,4 @@ def rotateHand(com, rot, joints3D, dims):
     # clip the limits of the joints
     new_joints3D = np.clip(np.asarray(new_joints3D, dtype='float32') / (cubez / 2.0), -1, 1)
 
-    return new_joints3D
+    return image,new_joints3D

@@ -10,13 +10,15 @@ def deg2rad(deg):
 def modifySample(label,image,com3D,M,sigma_sc=0.05,sigma_com=5.):
 
     # Keep the original samples once in a while
-    if (np.random.randint(32) == 0):
-        return label,image,com3D,M
+    #if (np.random.randint(32) == 0):
+    #    return label,image,com3D,M
 
     aug_modes = ['rot', 'scale', 'trans']
 
     # in plane rotation angle
-    rot = np.random.uniform(0, 360)
+    #rot = np.random.uniform(0, 360)
+    #rot = tf.random_uniform([1],minval=0,maxval=360)
+
     # scaling factor
     sc = abs(1. + np.random.randn() * sigma_sc)
     # translation offset
@@ -24,6 +26,9 @@ def modifySample(label,image,com3D,M,sigma_sc=0.05,sigma_com=5.):
     # pick an augmentation method
     #mode = np.random.randint(0, len(aug_modes))
     mode=0
+    #rot = 270
+
+    var = tf.Variable(tf.random_uniform([1],minval=0,maxval=360), name="var")
 
     dim=image.get_shape().as_list()
 
@@ -34,9 +39,10 @@ def modifySample(label,image,com3D,M,sigma_sc=0.05,sigma_com=5.):
     In-plane rotations. Do note that tensorflow contrib function takes in rotation angle in radians
     '''
     if aug_modes[mode]=='rot':
-        image = tf.contrib.image.rotate(image,-deg2rad(rot))
-        r = tf.constant(rot)
-        label = tf.py_func(rotateHand,[com3D, r, label, dim],[tf.float32])
+        #image = tf.contrib.image.rotate(image,-deg2rad(rot))
+        #image = tf.contrib.image.rotate(image, tf.multiply(rot,np.pi/180.0))
+        #r = tf.constant(rot)
+        image,label = tf.py_func(rotateHand,[image,com3D, label, dim],[tf.float32,tf.float32],stateful=False)
 
     return label,image,com3D,M
 
@@ -72,6 +78,7 @@ def read_and_decode(filename_queue,target_size,label_shape,data_augment):
         '''
         label,image,com3D,M = modifySample(label,image,com3D,M)
         label = tf.reshape(label,[label_shape,])
+        image = tf.reshape(image, np.asarray(target_size))
         '''
         Ends here!
         '''

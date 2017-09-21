@@ -95,8 +95,8 @@ def train_model(config,seqconfig):
         threads = tf.train.start_queue_runners(coord=coord)
         try:
             while not coord.should_stop():
-
-                if (0):
+                '''
+                if (1):
                     gt = train_labels.eval()
                     imgs = train_images.eval()
                     img_0 = imgs[0]
@@ -108,11 +108,25 @@ def train_model(config,seqconfig):
                     gt0 = gt[0].reshape(36,3)*150
                     jcrop = trans3DsToImg(gt0, coms_0, ms_0)
                     showJointsOnly(im,jcrop)
+                '''
+                if (1):
+                    gt = train_labels.eval()
+                    imgs = train_images.eval()
+                    coms = com3Ds.eval()
+                    ms = Ms.eval()
+                    for kk in range(imgs.shape[0]):
+                        tmp_im = imgs[kk]
+                        tmp_com = coms[kk]
+                        tmp_m = ms[kk]
+                        tmp_im = tmp_im.reshape([128,128])
+                        tmp_gt = gt[kk].reshape(36, 3) * 150
+                        tmp_crop = trans3DsToImg(tmp_gt, tmp_com, tmp_m)
+                        showJointsOnly(tmp_im, tmp_crop)
 
                 _,image_np,image_label,image_coms,image_Ms,tr_error,tr_loss,tr_loss_wd = sess.run([train_op,train_images,train_labels,com3Ds,Ms,train_error,loss,loss_wd])
                 print("step={},loss={},losswd={},error={} mm".format(step,tr_loss,tr_loss_wd,tr_error))
 
-                if step % 20 ==0:
+                if step % 2000 ==0:
                     val_image_np, val_image_label, val_image_coms, val_image_Ms,v_error= sess.run(
                         [val_images, val_labels, val_com3Ds, val_Ms,val_error])
                     print("     val error={} mm".format(v_error))
@@ -170,15 +184,16 @@ def test_model(config,seqconfig):
                                             image_target_size=config.image_target_size,
                                             label_shape=config.num_classes,
                                             batch_size=1)
-    with tf.device('/gpu:1'):
+    with tf.device('/gpu:0'):
         with tf.variable_scope("cnn") as scope:
             model=cnn_model_struct()
             model.build(images, config.num_classes, train_mode=False)
-            labels_shaped = tf.reshape(labels, [config.num_classes / 3, 3]) * \
+            labels_shaped = tf.reshape(labels, [(config.num_classes / 3), 3]) * \
                                 seqconfig['cube'][2] / 2.
-            results_shaped = tf.reshape(model.out_put, [config.num_classes / 3, 3]) * \
+            results_shaped = tf.reshape(model.out_put, [(config.num_classes / 3), 3]) * \
                                  seqconfig['cube'][2] / 2.
             error = getMeanError(labels_shaped, results_shaped)
+            #error = getMeanErrors_N(labels_shaped, results_shaped)
 
             # Initialize the graph
         gpuconfig = tf.ConfigProto()
@@ -192,22 +207,23 @@ def test_model(config,seqconfig):
             step=0
             joint_labels = []
             joint_results = []
+
             coord = tf.train.Coordinator()
             threads=tf.train.start_queue_runners(coord=coord)
             try:
                 while not coord.should_stop():
                     checkpoints=tf.train.latest_checkpoint(config.model_output)
                     saver.restore(sess,checkpoints)
-                    images_np,labels_np,results_np,images_coms,images_Ms,joint_error,labels_sp,results_sp=sess.run([\
+                    images_np,labels_np,results_np,images_coms,images_Ms,joint_error,labels_sp,results_sp=sess.run([
                         images,labels,model.out_put,com3Ds,Ms,error,labels_shaped,results_shaped])
                     joint_labels.append(labels_sp)
                     joint_results.append(results_sp)
                     print("step={}, test error={} mm".format(step,joint_error))
-
                     if step==0:
                         sum_error=joint_error
                     else:
                         sum_error=sum_error+joint_error
+
                     # if step%100 ==0:
                     #     result_name="results_com/cnn/results/image_{}.png".format(step)
                     #     save_result_image(images_np,images_coms,images_Ms,labels_sp,results_sp,seqconfig['cube'][2] / 2.,result_name)
@@ -224,11 +240,11 @@ def test_model(config,seqconfig):
             print("load model from {}".format(checkpoints))
             print ("testing mean error is {}mm".format(sum_error / step))
 
-            pickleCache = 'results_com/cnn/cnn_result_cache.pkl'
-            print("Save cache data to {}".format(pickleCache))
-            f = open(pickleCache, 'wb')
-            cPickle.dump((joint_labels, joint_results), f, protocol=cPickle.HIGHEST_PROTOCOL)
-            f.close()
+            #pickleCache = 'results_com/cnn/cnn_result_cache.pkl'
+            #print("Save cache data to {}".format(pickleCache))
+            #f = open(pickleCache, 'wb')
+            #cPickle.dump((joint_labels, joint_results), f, protocol=cPickle.HIGHEST_PROTOCOL)
+            #f.close()
             np_labels = np.asarray(joint_labels)
             np_results = np.asarray(joint_results)
             np_mean = getMeanError_np(np_labels, np_results)

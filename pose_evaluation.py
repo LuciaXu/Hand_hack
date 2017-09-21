@@ -43,6 +43,13 @@ def getMeanError(labels,results):
     assert(labels.shape==results.shape)
     return tf.reduce_mean(tf.sqrt(tf.reduce_sum(tf.square(labels-results), 1)),0)
 
+def getMeanErrors_N(labels,results):
+    """
+    get average error over all joints, averaged over sequence
+    :return: mean error
+    """
+    assert(labels.shape==results.shape)
+    return tf.reduce_mean(tf.sqrt(tf.reduce_sum(tf.square(labels-results), 2)),1)
 
 def getMaxError(labels,results):
     """
