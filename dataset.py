@@ -125,6 +125,9 @@ class Dataset(object):
                     com3DStack[i] = imgSeq.data[i].com
                     MStack[i] = imgSeq.data[i].T
 
+                    #tmp_label = trans3DsToImg(labelStack[i]*150, com3DStack[i], MStack[i])
+                    #showImageLable(imgD, tmp_label)
+
                 self._imgStacks[seqName] = imgStack
                 self._labelStacks[seqName] = labelStack
 

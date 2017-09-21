@@ -102,9 +102,6 @@ def rotateHand(image, com, joints3D, dims):
     :return: new 3D joint coordinates
     """
     rot = np.random.uniform(0, 360)
-    #rot = 273
-    #rot = 33
-    print('rot1 %f'%rot)
 
     cubez = 300
     # rescale joints
@@ -126,7 +123,6 @@ def rotateHand(image, com, joints3D, dims):
 
     # translate to COM and project on to the image
     joint_2D = joints3DToImg(joints3D + com)
-    print('rot2 %f' % rot)
     # rotate every joint in plane
     data_2D = np.zeros_like(joint_2D)
     for k in xrange(data_2D.shape[0]):
@@ -137,3 +133,23 @@ def rotateHand(image, com, joints3D, dims):
     new_joints3D = np.clip(np.asarray(new_joints3D, dtype='float32') / (cubez / 2.0), -1, 1)
 
     return image,new_joints3D
+
+def augment_sample(label,image,com3D,M,dims):
+    # possible augmentation modes
+    aug_modes = ['rot', 'scale', 'trans']
+    # pick an augmentation method
+    #mode = np.random.randint(0, len(aug_modes))
+    mode = 0
+
+    if aug_modes[mode] == 'rot':
+        image, label = rotateHand(image, com3D, label, dims)
+
+    '''
+    elif aug_modes[mode] == 'scale':
+        imgD, new_joints3D, cube, M = hd.scaleHand(img.astype('float32'), cube, com, sc, gt3Dcrop, M)
+    elif aug_modes[mode] == 'trans':
+        imgD, new_joints3D, com, M = hd.transHand(img.astype('float32'), cube, com, off, gt3Dcrop, M)
+    else:
+        print('Such an augmentation method has not be implemented')
+    '''
+    return label,image,com3D,M

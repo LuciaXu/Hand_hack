@@ -21,7 +21,7 @@ class handConfig(object):
         self.epochs = 200
         self.image_target_size = [128,128,1]
         self.label_shape = 36
-        self.train_batch = 1
+        self.train_batch = 16
         self.val_batch= 1
         self.initialize_layers = ['fc6', 'fc7', 'pre_fc8', 'fc8']
         self.fine_tune_layers = ['fc6', 'fc7', 'pre_fc8', 'fc8']

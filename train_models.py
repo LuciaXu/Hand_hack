@@ -28,7 +28,8 @@ def test_input_full(config,seqconfig):
                                            num_epochs=config.epochs,
                                            image_target_size = config.image_target_size,
                                            label_shape=config.num_classes,
-                                           batch_size =config.train_batch)
+                                           batch_size =config.train_batch,
+                                                     data_augment=True)
         val_images, val_labels, val_com3Ds, val_Ms = inputs(tfrecord_file=val_data,
                                                             num_epochs=config.epochs,
                                                             image_target_size=config.image_target_size,

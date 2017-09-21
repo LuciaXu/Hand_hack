@@ -423,7 +423,8 @@ class NYUImporter(Importer):
             # print gtcrop[0]
 
             #print("shape {}".format(gt3Dorig.shape))
-            #showAnnotatedDepth(ICVLFrame(dpt,gtorig,gtcrop,M,gt3Dorig,gt3Dcrop,com3D,dptFileName,''))
+            #if np.mod(line,10) == 0:
+            #    showAnnotatedDepth(ICVLFrame(dpt,gtorig,gtcrop,M,gt3Dorig,gt3Dcrop,com3D,dptFileName,''))
             #gtcrop_test = trans3DsToImg(gt3Dcrop,com3D,M)
             #showImageLable(dpt,gtcrop_test)
 

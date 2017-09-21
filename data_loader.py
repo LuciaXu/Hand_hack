@@ -7,45 +7,6 @@ from utils import *
 def deg2rad(deg):
     return deg * (np.pi/180.0)
 
-def modifySample(label,image,com3D,M,sigma_sc=0.05,sigma_com=5.):
-
-    # Keep the original samples once in a while
-    #if (np.random.randint(32) == 0):
-    #    return label,image,com3D,M
-
-    aug_modes = ['rot', 'scale', 'trans']
-
-    # in plane rotation angle
-    #rot = np.random.uniform(0, 360)
-    #rot = tf.random_uniform([1],minval=0,maxval=360)
-
-    # scaling factor
-    sc = abs(1. + np.random.randn() * sigma_sc)
-    # translation offset
-    off = np.random.randn(3) * sigma_com
-    # pick an augmentation method
-    #mode = np.random.randint(0, len(aug_modes))
-    mode=0
-    #rot = 270
-
-    var = tf.Variable(tf.random_uniform([1],minval=0,maxval=360), name="var")
-
-    dim=image.get_shape().as_list()
-
-    label_dims = label.get_shape().as_list()
-    label = tf.reshape(label,[label_dims[0]/3, 3])
-
-    '''
-    In-plane rotations. Do note that tensorflow contrib function takes in rotation angle in radians
-    '''
-    if aug_modes[mode]=='rot':
-        #image = tf.contrib.image.rotate(image,-deg2rad(rot))
-        #image = tf.contrib.image.rotate(image, tf.multiply(rot,np.pi/180.0))
-        #r = tf.constant(rot)
-        image,label = tf.py_func(rotateHand,[image,com3D, label, dim],[tf.float32,tf.float32],stateful=False)
-
-    return label,image,com3D,M
-
 def read_and_decode(filename_queue,target_size,label_shape,data_augment):
     reader = tf.TFRecordReader()
     _,serialized_example = reader.read(filename_queue)
@@ -76,9 +37,17 @@ def read_and_decode(filename_queue,target_size,label_shape,data_augment):
         Augmentations happen here! Take each sample and pick an aug mode 
         and modify the image and the respective label
         '''
-        label,image,com3D,M = modifySample(label,image,com3D,M)
+        dim = image.get_shape().as_list()
+        label_dims = label.get_shape().as_list()
+        label = tf.reshape(label, [label_dims[0] / 3, 3])
+        
+        # call the wrapper
+        label, image, com3D, M = tf.py_func(augment_sample,[label,image,com3D,M,dim],[tf.float32,tf.float32,tf.float32,tf.float32])
+        # reshape outputs to compatible states
         label = tf.reshape(label,[label_shape,])
         image = tf.reshape(image, np.asarray(target_size))
+        com3D = tf.reshape(com3D, (3,))
+        M = tf.reshape(M, (3, 3))
         '''
         Ends here!
         '''
