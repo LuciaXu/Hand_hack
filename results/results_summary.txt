@@ -1,0 +1,11 @@
+*****************************************************
+Method                    Average joint error (in mm)
+****************************************************
+
+Simple CNN			17.9
+Dense Hierarchical ResNet	17.2
+(DHRN)
+
+DHRN (with smooth L1-loss)	16.9
+
+Simple CNN + Augmentation	14.75
