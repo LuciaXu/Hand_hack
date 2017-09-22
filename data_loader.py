@@ -40,12 +40,13 @@ def read_and_decode(filename_queue,target_size,label_shape,data_augment):
         dim = image.get_shape().as_list()
         label_dims = label.get_shape().as_list()
         label = tf.reshape(label, [label_dims[0] / 3, 3])
-        
+
         # call the wrapper
         label, image, com3D, M = tf.py_func(augment_sample,[label,image,com3D,M,dim],[tf.float32,tf.float32,tf.float32,tf.float32])
         # reshape outputs to compatible states
         label = tf.reshape(label,[label_shape,])
         image = tf.reshape(image, np.asarray(target_size))
+
         com3D = tf.reshape(com3D, (3,))
         M = tf.reshape(M, (3, 3))
         '''

@@ -6,7 +6,7 @@ class handConfig(object):
         self.results_dir = '/media/data_cifs/lakshmi/results/'
         self.model_output = '/media/data_cifs/lakshmi/models/'
         self.model_input = ''
-        self.train_summaries = '/media/data_cifs/lakshmi/summaries/12sept'
+        self.train_summaries = '/media/data_cifs/lakshmi/summaries/21sept'
         self.tfrecord_dir = '/media/data_cifs/lakshmi/tfrecords/'
         self.train_tfrecords = 'train.tfrecords'
         self.val_tfrecords = 'val.tfrecords'
@@ -18,11 +18,11 @@ class handConfig(object):
 
         #model setting
         self.model_type = 'vgg_regression_model_4fc'
-        self.epochs = 200
+        self.epochs = 300
         self.image_target_size = [128,128,1]
         self.label_shape = 36
-        self.train_batch = 16
-        self.val_batch= 1
+        self.train_batch = 128
+        self.val_batch= 64
         self.initialize_layers = ['fc6', 'fc7', 'pre_fc8', 'fc8']
         self.fine_tune_layers = ['fc6', 'fc7', 'pre_fc8', 'fc8']
         self.batch_norm = ['conv1','fc1','fc2']

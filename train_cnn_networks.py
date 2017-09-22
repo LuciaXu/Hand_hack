@@ -147,26 +147,26 @@ def train_model(config,seqconfig):
                                 'cnn_model' + str(step) +'.ckpt'), global_step=step)
                             # store the new max validation accuracy
                             val_min = v_error
-                if (step > 0) and (step <10):
-
-                    for b in range(config.train_batch):
-                        im = image_np[b]
-                        print("im shape:{}".format(im.shape))
-                        image_com = image_coms[b]
-                        image_M = image_Ms[b]
-                        #print("shape of im:{}".format(im.shape))
-                        jts = image_label[b]
-                        im = im.reshape([128,128])
-                        check_image_label(im,jts,image_com,image_M,seqconfig['cube'][2] / 2.,allJoints=True,line=True)
-
-                    val_im = val_image_np[0]
-                    print("val_im shape:{}".format(val_im.shape))
-                    val_image_com = val_image_coms[0]
-                    val_image_M = val_image_Ms[0]
-                    # print("shape of im:{}".format(im.shape))
-                    val_jts = val_image_label[0]
-                    val_im = val_im.reshape([128, 128])
-                    check_image_label(val_im, val_jts, val_image_com, val_image_M, seqconfig['cube'][2] / 2.,allJoints=True,line=True)
+                # if (step > 0) and (step <10):
+                #
+                #     for b in range(config.train_batch):
+                #         im = image_np[b]
+                #         print("im shape:{}".format(im.shape))
+                #         image_com = image_coms[b]
+                #         image_M = image_Ms[b]
+                #         #print("shape of im:{}".format(im.shape))
+                #         jts = image_label[b]
+                #         im = im.reshape([128,128])
+                #         check_image_label(im,jts,image_com,image_M,seqconfig['cube'][2] / 2.,allJoints=True,line=True)
+                #
+                #     val_im = val_image_np[0]
+                #     print("val_im shape:{}".format(val_im.shape))
+                #     val_image_com = val_image_coms[0]
+                #     val_image_M = val_image_Ms[0]
+                #     # print("shape of im:{}".format(im.shape))
+                #     val_jts = val_image_label[0]
+                #     val_im = val_im.reshape([128, 128])
+                #     check_image_label(val_im, val_jts, val_image_com, val_image_M, seqconfig['cube'][2] / 2.,allJoints=True,line=True)
 
                 step += 1
 
