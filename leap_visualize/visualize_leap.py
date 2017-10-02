@@ -57,6 +57,7 @@ def parseJointLocations(strs):
 
 def displayJoints(ax,joints):
     ax.clear()
+    ax.grid('off')
     ax.set_xlim([-300,300])
     ax.set_ylim([-300, 300])
     ax.set_zlim([-300, 300])
@@ -64,15 +65,21 @@ def displayJoints(ax,joints):
 
     for finger in finger_db:
         for bone in bones_db:
-            ax.scatter(joints[finger][bone][0][0],joints[finger][bone][0][1],joints[finger][bone][0][2])
             if bone == 'TYPE_TIP':
                 continue
+            ax.scatter(joints[finger][bone][0][0],joints[finger][bone][0][1],joints[finger][bone][0][2],color='gray',alpha=0.5)
             x = [joints[finger][bone][0][0],joints[finger][bone][1][0]]
             y = [joints[finger][bone][0][1], joints[finger][bone][1][1]]
             z = [joints[finger][bone][0][2], joints[finger][bone][1][2]]
 
-            ax.plot(x,y,z)
+            c = 'gray'
+            a = 0.4
+            if finger == 'TYPE_THUMB' or finger == 'TYPE_INDEX':
+                c = 'red'
+                a = 1.0
+            ax.plot(x,y,z,color=c,alpha=a)
     plt.pause(0.001)
+    #plt.show()
 
 def main():
     fig = plt.figure()
