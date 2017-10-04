@@ -4,11 +4,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-path = '/media/data_cifs/lakshmi/LeapMotion/170616150626/'
+path = '/media/data_cifs/lakshmi/LeapMotion/171003175221/'
+#path = '/media/data_cifs/lakshmi/LeapMotion/170907173018/'
+
 finger_db = ['TYPE_THUMB','TYPE_INDEX','TYPE_MIDDLE','TYPE_RING','TYPE_PINKY']
 bones_db = ['TYPE_TIP','TYPE_METACARPAL','TYPE_PROXIMAL','TYPE_INTERMEDIATE','TYPE_DISTAL']
 
 def detecthand(str):
+    if len(str) == 0:
+        return False
+
     tags = str.split(',')
     dict={}
     for tag in tags:
@@ -26,6 +31,7 @@ def parseJointLocations(strs):
     finger=''
 
     for str in strs:
+        #print len(str)
         finger_found=False
         idx = str.find('Finger id')
         if idx != -1:
@@ -82,24 +88,35 @@ def displayJoints(ax,joints):
     #plt.show()
 
 def main():
+    nTrails = 0
+    freshDetect = True
+
     fig = plt.figure()
     ax = fig.add_subplot(111,projection='3d')
 
     idx = 0
     while True:
-        print idx
+        #print idx
         filename = '{}leap_{}.txt'.format(path,idx)
         if not os.path.exists(filename):
-            plt.show()
-            exit(0)
+            break
 
         leapinfo = open(filename,'r')
         hand_found = detecthand(leapinfo.readline())
         if hand_found:
+            if freshDetect == True:
+                nTrails=nTrails+1
+                freshDetect = False
+
             joints = parseJointLocations(leapinfo.readlines())
             displayJoints(ax,joints)
+        else:
+            freshDetect = True
+
         idx+=1
+
     plt.show()
+    print('Number of trails: %d'%nTrails)
 
 if __name__ == "__main__":
     main()
