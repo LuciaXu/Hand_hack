@@ -2,9 +2,14 @@ import re
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import glob
 from mpl_toolkits.mplot3d import Axes3D
 
-path = '/media/data_cifs/lakshmi/LeapMotion/171003175221/'
+path_good = '/media/playroom_data/3697/LeapMotion/170315154638/'
+
+#path_good = '/media/playroom_data/3735/LeapMotion/170327162917/'
+basepath = '/media/playroom_data/'
+
 #path = '/media/data_cifs/lakshmi/LeapMotion/170907173018/'
 
 finger_db = ['TYPE_THUMB','TYPE_INDEX','TYPE_MIDDLE','TYPE_RING','TYPE_PINKY']
@@ -87,16 +92,19 @@ def displayJoints(ax,joints):
     plt.pause(0.001)
     #plt.show()
 
-def main():
+def processSubject(path,disp=False):
     nTrails = 0
     freshDetect = True
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111,projection='3d')
+    if disp:
+        fig = plt.figure()
+        ax = fig.add_subplot(111,projection='3d')
 
     idx = 0
+    gripaperture = []
+
     while True:
-        #print idx
+        print idx
         filename = '{}leap_{}.txt'.format(path,idx)
         if not os.path.exists(filename):
             break
@@ -109,14 +117,72 @@ def main():
                 freshDetect = False
 
             joints = parseJointLocations(leapinfo.readlines())
-            displayJoints(ax,joints)
+            diff = np.asarray(joints['TYPE_THUMB']['TYPE_TIP'][0] - joints['TYPE_INDEX']['TYPE_TIP'][0])
+            dist = np.sqrt(diff[0]*diff[0] + diff[1]*diff[1] + diff[2]*diff[2])
+            gripaperture.append(dist)
+            if disp:
+                displayJoints(ax,joints)
         else:
+            gripaperture.append(0)
             freshDetect = True
 
         idx+=1
 
-    plt.show()
+    if disp:
+        plt.show()
     print('Number of trails: %d'%nTrails)
+    return nTrails, gripaperture
+
+def smoothListGaussian(list,strippedXs=False,degree=15):
+
+     window=degree*2-1
+     weight=np.array([1.0]*window)
+     weightGauss=[]
+
+     for i in range(window):
+         i=i-degree+1
+         frac=i/float(window)
+         gauss=1/(np.exp((4*(frac))**2))
+         weightGauss.append(gauss)
+
+     weight=np.array(weightGauss)*weight
+     smoothed=[0.0]*(len(list)-window)
+
+     for i in range(len(smoothed)):
+         smoothed[i]=sum(np.array(list[i:i+window])*weight)/sum(weight)
+     return smoothed
+
+def main():
+
+    #processSubject(path_good,disp=True)
+
+    t = 0
+    trails = []
+    folders = glob.glob(basepath+'[0-9]*')
+    for subject in folders:
+        tmp_path = subject+'/LeapMotion/'
+        path = glob.glob(tmp_path+'[0-9]*')
+        if len(path) == 0:
+            continue
+        print path
+        ntrails,gripaperture = processSubject(path[0]+'/')
+        trails.append(ntrails)
+
+        if not (ntrails == 0):
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.plot(gripaperture,color='red',alpha=0.5)
+            ax.plot(smoothListGaussian(gripaperture))
+            ax.set_xlabel('Time')
+            ax.set_ylabel('Grip Aperture')
+            ax.set_title(path)
+            plt.savefig(str(t)+'.png')
+            plt.close()
+            t=t+1
+
+    plt.figure()
+    plt.hist(trails)
+    plt.show()
 
 if __name__ == "__main__":
     main()
