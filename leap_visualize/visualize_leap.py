@@ -17,16 +17,18 @@ bones_db = ['TYPE_TIP','TYPE_METACARPAL','TYPE_PROXIMAL','TYPE_INTERMEDIATE','TY
 
 def detecthand(str):
     if len(str) == 0:
-        return False
+        return False,0
 
     tags = str.split(',')
     dict={}
     for tag in tags:
         dict[tag.split(':')[0].strip()] = int(tag.split(':')[1])
+    time = np.mod(float(dict['timestamp']),10000000)
+
     if dict['hands'] == 0:
-        return False
+        return False,time
     else:
-        return True
+        return True,time
 
 def parseJointLocations(strs):
     dict={}
@@ -102,6 +104,7 @@ def processSubject(path,disp=False):
 
     idx = 0
     gripaperture = []
+    time = []
 
     while True:
         print idx
@@ -110,7 +113,9 @@ def processSubject(path,disp=False):
             break
 
         leapinfo = open(filename,'r')
-        hand_found = detecthand(leapinfo.readline())
+        hand_found,timestamp = detecthand(leapinfo.readline())
+        time.append(timestamp)
+
         if hand_found:
             if freshDetect == True:
                 nTrails=nTrails+1
@@ -131,9 +136,9 @@ def processSubject(path,disp=False):
     if disp:
         plt.show()
     print('Number of trails: %d'%nTrails)
-    return nTrails, gripaperture
+    return nTrails, gripaperture, time
 
-def smoothListGaussian(list,strippedXs=False,degree=15):
+def smoothListGaussian(list,time,strippedXs=False,degree=15):
 
      window=degree*2-1
      weight=np.array([1.0]*window)
@@ -150,7 +155,16 @@ def smoothListGaussian(list,strippedXs=False,degree=15):
 
      for i in range(len(smoothed)):
          smoothed[i]=sum(np.array(list[i:i+window])*weight)/sum(weight)
-     return smoothed
+     return smoothed,time[degree:(-degree+1)]
+
+def getlabels(time,win=5000):
+    labels = []
+    for i in range(0,len(time),win):
+        t = str(time[i])
+        t_formatted = t[0:2]+':'+t[2:4]+':'+t[4:-2]
+        labels.append(t_formatted)
+    print(labels)
+    return labels
 
 def main():
 
@@ -165,18 +179,29 @@ def main():
         if len(path) == 0:
             continue
         print path
-        ntrails,gripaperture = processSubject(path[0]+'/')
+        ntrails,gripaperture,time = processSubject(path[0]+'/')
+
+        time = np.asarray(time)
+        gripaperture = np.asarray(gripaperture)
+
         trails.append(ntrails)
 
         if not (ntrails == 0):
             fig = plt.figure()
             ax = fig.add_subplot(111)
-            ax.plot(gripaperture,color='red',alpha=0.5)
-            ax.plot(smoothListGaussian(gripaperture))
-            ax.set_xlabel('Time')
-            ax.set_ylabel('Grip Aperture')
-            ax.set_title(path)
-            plt.savefig(str(t)+'.png')
+            ax.plot(time,gripaperture,color='red',alpha=0.5)
+
+            sm_grip,sm_time=smoothListGaussian(gripaperture,time)
+            ax.plot(sm_time,sm_grip)
+
+            ax.set_xticks(time[0::len(time)/3])
+            ax.set_xticklabels(getlabels(time, len(time)/3),rotation=45,size='xx-small')
+
+            ax.set_xlabel('Time',size='xx-small')
+            ax.set_ylabel('Grip Aperture',size='xx-small')
+            ax.set_title(path,size='xx-small')
+            #plt.show()
+            plt.savefig(str(t)+'.pdf')
             plt.close()
             t=t+1
 
