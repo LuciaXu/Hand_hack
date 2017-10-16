@@ -7,7 +7,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 basepath = '/media/playroom_data/NEPIN_SmartPlayroom/SubjectData/'
 subject_specific_path = '/media/playroom_data/Leap_Test/20171016114747/'
-process_batch=True
+process_batch=False
 
 finger_db = ['TYPE_THUMB','TYPE_INDEX','TYPE_MIDDLE','TYPE_RING','TYPE_PINKY']
 bones_db = ['TYPE_TIP','TYPE_METACARPAL','TYPE_PROXIMAL','TYPE_INTERMEDIATE','TYPE_DISTAL']
@@ -102,12 +102,20 @@ def processSubject(path,disp=False,idx=0):
     gripaperture = []
     time = []
 
+    file_list = glob.glob(path+'*')
+    num_files = len(file_list)
+    file_count = 0
+
     while True:
         print idx
         filename = '{}leap_{}.txt'.format(path,idx)
         if not os.path.exists(filename):
-            break
+            continue
 
+	if file_count == num_files:
+	    break
+
+	file_count=file_count+1
         leapinfo = open(filename,'r')
         hand_found,timestamp = detecthand(leapinfo.readline())
         time.append(timestamp)
@@ -126,13 +134,11 @@ def processSubject(path,disp=False,idx=0):
         else:
             gripaperture.append(0)
             freshDetect = True
-
         idx+=1
-
-    if disp:
-	plt.savefig(str(idx)+'.png')
-	plt.close()
-        #plt.show()
+	
+	if disp:
+		plt.savefig(str(idx)+'.png')
+		#plt.show()
 
     print('Number of trails: %d'%nTrails)
     return nTrails, gripaperture, time
@@ -184,7 +190,6 @@ def makeplot(time,gripaperture,t,heading=''):
 	#plt.show()
 	plt.savefig(str(t)+'.pdf')
 	plt.close()
-
 
 def main():
 
