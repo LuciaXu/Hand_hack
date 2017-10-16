@@ -5,12 +5,9 @@ import matplotlib.pyplot as plt
 import glob
 from mpl_toolkits.mplot3d import Axes3D
 
-path_good = '/media/playroom_data/3697/LeapMotion/170315154638/'
-
-#path_good = '/media/playroom_data/3735/LeapMotion/170327162917/'
-basepath = '/media/playroom_data/'
-
-#path = '/media/data_cifs/lakshmi/LeapMotion/170907173018/'
+basepath = '/media/playroom_data/NEPIN_SmartPlayroom/SubjectData/'
+subject_specific_path = '/media/playroom_data/Leap_Test/20171016114747/'
+process_batch=True
 
 finger_db = ['TYPE_THUMB','TYPE_INDEX','TYPE_MIDDLE','TYPE_RING','TYPE_PINKY']
 bones_db = ['TYPE_TIP','TYPE_METACARPAL','TYPE_PROXIMAL','TYPE_INTERMEDIATE','TYPE_DISTAL']
@@ -94,7 +91,7 @@ def displayJoints(ax,joints):
     plt.pause(0.001)
     #plt.show()
 
-def processSubject(path,disp=False):
+def processSubject(path,disp=False,idx=0):
     nTrails = 0
     freshDetect = True
 
@@ -102,7 +99,6 @@ def processSubject(path,disp=False):
         fig = plt.figure()
         ax = fig.add_subplot(111,projection='3d')
 
-    idx = 0
     gripaperture = []
     time = []
 
@@ -134,7 +130,10 @@ def processSubject(path,disp=False):
         idx+=1
 
     if disp:
-        plt.show()
+	plt.savefig(str(idx)+'.png')
+	plt.close()
+        #plt.show()
+
     print('Number of trails: %d'%nTrails)
     return nTrails, gripaperture, time
 
@@ -166,48 +165,53 @@ def getlabels(time,win=5000):
     print(labels)
     return labels
 
+def makeplot(time,gripaperture,t,heading=''):
+	time = np.asarray(time)
+	gripaperture = np.asarray(gripaperture)
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	ax.plot(time,gripaperture,color='red',alpha=0.5)
+
+	sm_grip,sm_time=smoothListGaussian(gripaperture,time)
+	ax.plot(sm_time,sm_grip)
+
+	ax.set_xticks(time[0::len(time)/3])
+	ax.set_xticklabels(getlabels(time, len(time)/3),rotation=45,size='xx-small')
+
+	ax.set_xlabel('Time',size='xx-small')
+	ax.set_ylabel('Grip Aperture',size='xx-small')
+	ax.set_title(heading,size='xx-small')
+	#plt.show()
+	plt.savefig(str(t)+'.pdf')
+	plt.close()
+
+
 def main():
 
-    #processSubject(path_good,disp=True)
+    if not process_batch:
+	ntrails,gripaperture,time = processSubject(subject_specific_path,disp=True,idx=685762)
+	makeplot(time,gripaperture,0,'16-october-lakshmi-test')
+    else:
+	t = 0
+	trails = []
+	folders = glob.glob(basepath+'[0-9]*')
+	for subject in folders:
+		tmp_path = subject+'/LeapMotion/'
+		path = glob.glob(tmp_path+'[0-9]*')
+		if len(path) == 0:
+			continue
+		print path
+		ntrails,gripaperture,time = processSubject(path[0]+'/')
 
-    t = 0
-    trails = []
-    folders = glob.glob(basepath+'[0-9]*')
-    for subject in folders:
-        tmp_path = subject+'/LeapMotion/'
-        path = glob.glob(tmp_path+'[0-9]*')
-        if len(path) == 0:
-            continue
-        print path
-        ntrails,gripaperture,time = processSubject(path[0]+'/')
+		trails.append(ntrails)
 
-        time = np.asarray(time)
-        gripaperture = np.asarray(gripaperture)
+		if not (ntrails == 0):
+			makeplot(time,gripaperture,t,path)
+			t=t+1
 
-        trails.append(ntrails)
-
-        if not (ntrails == 0):
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            ax.plot(time,gripaperture,color='red',alpha=0.5)
-
-            sm_grip,sm_time=smoothListGaussian(gripaperture,time)
-            ax.plot(sm_time,sm_grip)
-
-            ax.set_xticks(time[0::len(time)/3])
-            ax.set_xticklabels(getlabels(time, len(time)/3),rotation=45,size='xx-small')
-
-            ax.set_xlabel('Time',size='xx-small')
-            ax.set_ylabel('Grip Aperture',size='xx-small')
-            ax.set_title(path,size='xx-small')
-            #plt.show()
-            plt.savefig(str(t)+'.pdf')
-            plt.close()
-            t=t+1
-
-    plt.figure()
-    plt.hist(trails)
-    plt.show()
+	plt.figure()
+	plt.hist(trails)
+	plt.show()
 
 if __name__ == "__main__":
     main()
